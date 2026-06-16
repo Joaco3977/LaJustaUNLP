@@ -1,7 +1,11 @@
-// Fallback for using MaterialIcons on Android and web.
+/** Este componente es un ejemplo de cómo mapear los íconos de SF Symbols a Material Icons para usarlos en Android y web.
+ * Basicamente los iconos los definimos en SF Symbols, y luego los mapeamos a Material Icons usando el objeto MAPPING. 
+ * Esto nos permite usar los mismos nombres de iconos en toda la app, y tener una apariencia consistente en todas las plataformas.
+ * Si el mapeo no se hace correctamente o no existe, no se rendizara el icono en Android y web, pero si en iOS. Por eso es importante mantener el mapeo actualizado.
+ */
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
@@ -9,13 +13,17 @@ type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof Materia
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
+ * En esta seccion agregar el mapeo de SF a Android, siguiendo estas reglas:
+ * - ver Material Icons en (https://icons.expo.fyi).
+ * - ver SF Symbols en (https://developer.apple.com/sf-symbols/).
  */
 const MAPPING = {
-  'house.fill': 'home',
-  'paperplane.fill': 'send',
+  'house.fill': 'home', // Para inicio, un icono de casa.
+  'person.crop.circle': 'account-circle', // Para cuenta, un icono de persona dentro de un círculo.
+  'person.3.fill': 'groups', // Para productores, 3 personas agrupadas.
+  'gearshape.fill': 'settings',
+  'cart.fill': 'shopping-cart', // Para carrito, un icono de carrito de compras.
+  'heart.fill': 'favorite', // Para nosotros, un icono de corazón.
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
 } as IconMapping;
