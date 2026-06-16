@@ -34,13 +34,15 @@ export default function TabLayout() {
         ),
 
         headerRight: () => (
-          <Pressable onPress={() => router.push('/cart')}>
-            <IconSymbol
-              name="cart.fill"
-              size={32}
-              color={Colors[colorScheme ?? 'light'].text}
-            />
-          </Pressable>
+          <View style={styles.headerRightContainer}>
+            <Pressable onPress={() => router.push('/cart')}>
+              <IconSymbol
+                name="cart.fill"
+                size={32}
+                color={Colors[colorScheme ?? 'light'].text}
+              />
+            </Pressable>
+          </View>
         ),
       }}
     >
@@ -90,6 +92,9 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   leftContainer: {
     paddingLeft: 16,
+  },
+  headerRightContainer: {
+    marginRight: 16,
   },
   logo: {
     width: 48,
