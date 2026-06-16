@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "LaJustaUNLP",
-    "slug": "LaJustaUNLP",
+    "slug": "lajustaunlp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -43,6 +43,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "541e5160-365a-4eaa-a436-42b59ccbc543"
+      }
+    },
+    "owner": "joaco3977"
   }
 }
