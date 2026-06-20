@@ -47,7 +47,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="home"
+        name="index" // Debe ser "index" para que sea la pantalla predeterminada
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color }) => (

@@ -17,6 +17,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 type Category = {
   id: number;
   name: string;
+  parent: null;
 };
 
 /* ===== CONFIG GRID ===== */
@@ -74,7 +75,7 @@ export default function HomeScreen() {
 
         const json = await res.json();
 
-        // 🔑 FILTRAMOS SOLO CATEGORÍAS PRINCIPALES
+        // FILTRO SOLO CATEGORÍAS PRINCIPALES --> SECUNDARIAS MOSTRAMOS LUEGO??
         const mainCategories = (json.page ?? []).filter(
           (category: Category) => category.parent === null
         );
