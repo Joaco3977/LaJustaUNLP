@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   Dimensions,
@@ -18,12 +19,10 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 type Category = {
   id: number;
   name: string;
-  parent: {
-    id: number;
-  } | null;
+  parent: { id: number } | null;
 };
 
-/* ===== CONFIG GRID ===== */
+/* ===== GRID CONFIG ===== */
 const PADDING = 24;
 const COLUMN_GAP = 12;
 const ROW_GAP = 30;
@@ -35,7 +34,7 @@ const AVAILABLE_WIDTH = SCREEN_WIDTH - PADDING * 2;
 const ITEM_SIZE =
   (AVAILABLE_WIDTH - COLUMN_GAP * (MAX_COLUMNS - 1)) / MAX_COLUMNS;
 
-/* ===== IMÁGENES ===== */
+/* ===== IMAGES ===== */
 const CATEGORY_IMAGES: Record<number, any> = {
   1: require('@/assets/images/categories/categorySample.png'),
   2: require('@/assets/images/categories/categorySample.png'),
@@ -67,6 +66,8 @@ const buildProductUrl = (categoryId: number) => {
 };
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -79,21 +80,12 @@ export default function HomeScreen() {
     const fetchCategories = async () => {
       try {
         const res = await fetch(CATEGORY_ENDPOINT);
-
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
         const json = await res.json();
+
         const all: Category[] = json.page ?? [];
 
         setAllCategories(all);
-
-        const mainCategories = all.filter(
-          (cat) => cat.parent === null
-        );
-
-        setCategories(mainCategories);
+        setCategories(all.filter((c) => c.parent === null));
       } catch (error) {
         console.error('Error cargando categorías', error);
       } finally {
@@ -105,24 +97,14 @@ export default function HomeScreen() {
   }, []);
 
   /* ===== CHILD CATEGORIES ===== */
-  const getChildCategories = (parentId: number) => {
-    return allCategories.filter(
-      (cat) => cat.parent?.id === parentId
-    );
-  };
+  const getChildCategories = (parentId: number) =>
+    allCategories.filter((cat) => cat.parent?.id === parentId);
 
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        <SearchBar />
-
-        <View style={styles.sectionHeader}>
-          <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
-            Explorá nuestras categorías
-          </ThemedText>
-          <ThemedText style={[styles.subtitle, { color: colors.subtext }]}>
-            Elegí, comprá y disfrutá
-          </ThemedText>
+        <View style={styles.searchContainer}>
+          <SearchBar />
         </View>
 
         <View style={styles.grid}>
@@ -137,6 +119,7 @@ export default function HomeScreen() {
                   key={item.id}
                   onPress={() => {
                     const url = buildProductUrl(item.id);
+
                     console.log('URL productos:', url);
 
                     const children = getChildCategories(item.id);
@@ -148,6 +131,8 @@ export default function HomeScreen() {
                         name: c.name,
                       }))
                     );
+
+                    router.push(`/category/${item.id}`);
                   }}
                   style={[
                     styles.card,
@@ -160,7 +145,7 @@ export default function HomeScreen() {
                 >
                   <Image source={imageSource} style={styles.image} />
 
-                  <ThemedText style={styles.cardText} numberOfLines={2}>
+                  <ThemedText style={styles.cardText}>
                     {item.name}
                   </ThemedText>
                 </Pressable>
@@ -178,31 +163,32 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: PADDING,
   },
+
   scroll: {
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
-  sectionHeader: {
-    marginVertical: 16,
+
+  /* 👇 separa el search del contenido */
+  searchContainer: {
+    marginBottom: 20,
   },
-  title: {
-    fontSize: 20,
-  },
-  subtitle: {
-    fontSize: 14,
-  },
+
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    marginTop: 8,
   },
+
   card: {
     alignItems: 'center',
   },
+
   image: {
     width: ITEM_SIZE,
     height: ITEM_SIZE,
     borderRadius: 14,
-    resizeMode: 'cover',
   },
+
   cardText: {
     marginTop: 6,
     fontSize: 12,
