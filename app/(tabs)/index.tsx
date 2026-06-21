@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   Dimensions,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -17,7 +18,9 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 type Category = {
   id: number;
   name: string;
-  parent: null;
+  parent: {
+    id: number;
+  } | null;
 };
 
 /* ===== CONFIG GRID ===== */
@@ -32,7 +35,7 @@ const AVAILABLE_WIDTH = SCREEN_WIDTH - PADDING * 2;
 const ITEM_SIZE =
   (AVAILABLE_WIDTH - COLUMN_GAP * (MAX_COLUMNS - 1)) / MAX_COLUMNS;
 
-/* ===== IMÁGENES LOCALES POR ID ===== */
+/* ===== IMÁGENES ===== */
 const CATEGORY_IMAGES: Record<number, any> = {
   1: require('@/assets/images/categories/categorySample.png'),
   2: require('@/assets/images/categories/categorySample.png'),
@@ -51,33 +54,43 @@ const FALLBACK_IMAGE = require('@/assets/images/categories/categorySample.png');
 const CATEGORY_ENDPOINT =
   'https://www.lajustaunlp.com.ar/api/category?properties=%5B%7B%22key%22%3A%22deletedAt%22%2C%22value%22%3A%22%22%7D%5D&sort=id%2CASC';
 
+/* ===== PRODUCT URL ===== */
+const buildProductUrl = (categoryId: number) => {
+  const properties = encodeURIComponent(
+    JSON.stringify([
+      { key: 'categories.id', value: categoryId },
+      { key: 'deletedAt', value: 'null' },
+    ])
+  );
+
+  return `https://www.lajustaunlp.com.ar/api/product?properties=${properties}&range=0,12&sort=id,ASC`;
+};
+
 export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  /* ===== FETCH ONCE ===== */
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch(CATEGORY_ENDPOINT, {
-          method: 'GET',
-          headers: {
-            Accept: 'application/json, text/plain, */*',
-          },
-        });
+        const res = await fetch(CATEGORY_ENDPOINT);
 
-        // Forzamos error si el status no es 2xx
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
 
         const json = await res.json();
+        const all: Category[] = json.page ?? [];
 
-        // FILTRO SOLO CATEGORÍAS PRINCIPALES --> SECUNDARIAS MOSTRAMOS LUEGO??
-        const mainCategories = (json.page ?? []).filter(
-          (category: Category) => category.parent === null
+        setAllCategories(all);
+
+        const mainCategories = all.filter(
+          (cat) => cat.parent === null
         );
 
         setCategories(mainCategories);
@@ -91,12 +104,16 @@ export default function HomeScreen() {
     fetchCategories();
   }, []);
 
+  /* ===== CHILD CATEGORIES ===== */
+  const getChildCategories = (parentId: number) => {
+    return allCategories.filter(
+      (cat) => cat.parent?.id === parentId
+    );
+  };
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
-      >
+      <ScrollView contentContainerStyle={styles.scroll}>
         <SearchBar />
 
         <View style={styles.sectionHeader}>
@@ -108,7 +125,6 @@ export default function HomeScreen() {
           </ThemedText>
         </View>
 
-        {/* GRID */}
         <View style={styles.grid}>
           {!loading &&
             categories.map((item, index) => {
@@ -117,8 +133,22 @@ export default function HomeScreen() {
                 CATEGORY_IMAGES[item.id] ?? FALLBACK_IMAGE;
 
               return (
-                <View
+                <Pressable
                   key={item.id}
+                  onPress={() => {
+                    const url = buildProductUrl(item.id);
+                    console.log('URL productos:', url);
+
+                    const children = getChildCategories(item.id);
+
+                    console.log(
+                      `Hijos de "${item.name}"`,
+                      children.map((c) => ({
+                        id: c.id,
+                        name: c.name,
+                      }))
+                    );
+                  }}
                   style={[
                     styles.card,
                     {
@@ -133,7 +163,7 @@ export default function HomeScreen() {
                   <ThemedText style={styles.cardText} numberOfLines={2}>
                     {item.name}
                   </ThemedText>
-                </View>
+                </Pressable>
               );
             })}
         </View>
@@ -148,39 +178,31 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: PADDING,
   },
-
   scroll: {
     paddingBottom: 24,
   },
-
   sectionHeader: {
     marginVertical: 16,
   },
-
   title: {
     fontSize: 20,
   },
-
   subtitle: {
     fontSize: 14,
   },
-
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-
   card: {
     alignItems: 'center',
   },
-
   image: {
     width: ITEM_SIZE,
     height: ITEM_SIZE,
     borderRadius: 14,
     resizeMode: 'cover',
   },
-
   cardText: {
     marginTop: 6,
     fontSize: 12,
