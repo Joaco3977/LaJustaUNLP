@@ -16,11 +16,6 @@ import {
   useCategories,
 } from '@/hooks/use-categories';
 
-/* ===== VIEW STATE ===== */
-type ViewState =
-  | { type: 'ROOT' }
-  | { type: 'CATEGORY'; category: Category };
-
 export default function HomeScreen() {
   const {
     rootCategories,
@@ -28,9 +23,35 @@ export default function HomeScreen() {
     loading,
   } = useCategories();
 
-  const [view, setView] = useState<ViewState>({
-    type: 'ROOT',
-  });
+  /* ===== CATEGORY STACK ===== */
+  const [stack, setStack] = useState<Category[]>([]);
+
+  const currentCategory =
+    stack.length > 0 ? stack[stack.length - 1] : null;
+
+  const visibleCategories = currentCategory
+    ? getChildren(currentCategory.id)
+    : rootCategories;
+
+  const handlePress = (category: Category) => {
+    const url = buildProductUrl(category.id);
+    const children = getChildren(category.id);
+
+    console.log('URL productos:', url);
+    console.log(
+      `Hijos de "${category.name}"`,
+      children.map((c) => ({
+        id: c.id,
+        name: c.name,
+      }))
+    );
+
+    setStack((prev) => [...prev, category]);
+  };
+
+  const handleBack = () => {
+    setStack((prev) => prev.slice(0, -1));
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -39,63 +60,28 @@ export default function HomeScreen() {
           <SearchBar />
         </View>
 
-        {/* ===== ROOT CATEGORIES ===== */}
-        {!loading && view.type === 'ROOT' && (
-          <CategoryGrid
-            categories={rootCategories}
-            onPress={(category) => {
-              const url = buildProductUrl(category.id);
-              const children = getChildren(category.id);
-
-              console.log('URL productos:', url);
-              console.log(
-                `Hijos de "${category.name}"`,
-                children.map((c) => ({
-                  id: c.id,
-                  name: c.name,
-                }))
-              );
-
-              setView({
-                type: 'CATEGORY',
-                category,
-              });
-            }}
-          />
+        {/* ===== BACK BUTTON ===== */}
+        {currentCategory && (
+          <Pressable onPress={handleBack}>
+            <ThemedText style={styles.back}>
+              ← Volver
+            </ThemedText>
+          </Pressable>
         )}
 
-        {/* ===== CATEGORY VIEW ===== */}
-        {!loading && view.type === 'CATEGORY' && (
-          <>
-            <Pressable
-              onPress={() => setView({ type: 'ROOT' })}
-            >
-              <ThemedText style={styles.back}>
-                ← Volver
-              </ThemedText>
-            </Pressable>
+        {/* ===== TITLE ===== */}
+        {currentCategory && (
+          <ThemedText style={styles.title}>
+            {currentCategory.name}
+          </ThemedText>
+        )}
 
-            <ThemedText style={styles.title}>
-              {view.category.name}
-            </ThemedText>
-
-            <CategoryGrid
-              categories={getChildren(view.category.id)}
-              onPress={(subcategory) => {
-                const url = buildProductUrl(subcategory.id);
-                const children = getChildren(subcategory.id);
-
-                console.log('URL productos:', url);
-                console.log(
-                  `Hijos de "${subcategory.name}"`,
-                  children.map((c) => ({
-                    id: c.id,
-                    name: c.name,
-                  }))
-                );
-              }}
-            />
-          </>
+        {/* ===== CATEGORY GRID ===== */}
+        {!loading && (
+          <CategoryGrid
+            categories={visibleCategories}
+            onPress={handlePress}
+          />
         )}
       </ScrollView>
     </ThemedView>
