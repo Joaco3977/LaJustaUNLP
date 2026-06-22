@@ -1,104 +1,36 @@
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
-  Dimensions,
-  Image,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
 
+import { CategoryGrid } from '@/components/category/category-grid';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import {
+  Category,
+  buildProductUrl,
+  useCategories,
+} from '@/hooks/use-categories';
 
-/* ===== TYPES ===== */
-type Category = {
-  id: number;
-  name: string;
-  parent: { id: number } | null;
-};
-
-/* ===== GRID CONFIG ===== */
-const PADDING = 24;
-const COLUMN_GAP = 12;
-const ROW_GAP = 30;
-const MAX_COLUMNS = 4;
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const AVAILABLE_WIDTH = SCREEN_WIDTH - PADDING * 2;
-
-const ITEM_SIZE =
-  (AVAILABLE_WIDTH - COLUMN_GAP * (MAX_COLUMNS - 1)) / MAX_COLUMNS;
-
-/* ===== IMAGES ===== */
-const CATEGORY_IMAGES: Record<number, any> = {
-  1: require('@/assets/images/categories/categorySample.png'),
-  2: require('@/assets/images/categories/categorySample.png'),
-  3: require('@/assets/images/categories/categorySample.png'),
-  4: require('@/assets/images/categories/categorySample.png'),
-  5: require('@/assets/images/categories/categorySample.png'),
-  6: require('@/assets/images/categories/categorySample.png'),
-  7: require('@/assets/images/categories/categorySample.png'),
-  8: require('@/assets/images/categories/categorySample.png'),
-  9: require('@/assets/images/categories/categorySample.png'),
-};
-
-const FALLBACK_IMAGE = require('@/assets/images/categories/categorySample.png');
-
-/* ===== API ===== */
-const CATEGORY_ENDPOINT =
-  'https://www.lajustaunlp.com.ar/api/category?properties=%5B%7B%22key%22%3A%22deletedAt%22%2C%22value%22%3A%22%22%7D%5D&sort=id%2CASC';
-
-/* ===== PRODUCT URL ===== */
-const buildProductUrl = (categoryId: number) => {
-  const properties = encodeURIComponent(
-    JSON.stringify([
-      { key: 'categories.id', value: categoryId },
-      { key: 'deletedAt', value: 'null' },
-    ])
-  );
-
-  return `https://www.lajustaunlp.com.ar/api/product?properties=${properties}&range=0,12&sort=id,ASC`;
-};
+/* ===== VIEW STATE ===== */
+type ViewState =
+  | { type: 'ROOT' }
+  | { type: 'CATEGORY'; category: Category };
 
 export default function HomeScreen() {
-  const router = useRouter();
+  const {
+    rootCategories,
+    getChildren,
+    loading,
+  } = useCategories();
 
-  const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
-
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [allCategories, setAllCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  /* ===== FETCH ONCE ===== */
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const res = await fetch(CATEGORY_ENDPOINT);
-        const json = await res.json();
-
-        const all: Category[] = json.page ?? [];
-
-        setAllCategories(all);
-        setCategories(all.filter((c) => c.parent === null));
-      } catch (error) {
-        console.error('Error cargando categorías', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  /* ===== CHILD CATEGORIES ===== */
-  const getChildCategories = (parentId: number) =>
-    allCategories.filter((cat) => cat.parent?.id === parentId);
+  const [view, setView] = useState<ViewState>({
+    type: 'ROOT',
+  });
 
   return (
     <ThemedView style={styles.container}>
@@ -107,91 +39,85 @@ export default function HomeScreen() {
           <SearchBar />
         </View>
 
-        <View style={styles.grid}>
-          {!loading &&
-            categories.map((item, index) => {
-              const isLastColumn = (index + 1) % MAX_COLUMNS === 0;
-              const imageSource =
-                CATEGORY_IMAGES[item.id] ?? FALLBACK_IMAGE;
+        {/* ===== ROOT CATEGORIES ===== */}
+        {!loading && view.type === 'ROOT' && (
+          <CategoryGrid
+            categories={rootCategories}
+            onPress={(category) => {
+              const url = buildProductUrl(category.id);
+              const children = getChildren(category.id);
 
-              return (
-                <Pressable
-                  key={item.id}
-                  onPress={() => {
-                    const url = buildProductUrl(item.id);
-
-                    console.log('URL productos:', url);
-
-                    const children = getChildCategories(item.id);
-
-                    console.log(
-                      `Hijos de "${item.name}"`,
-                      children.map((c) => ({
-                        id: c.id,
-                        name: c.name,
-                      }))
-                    );
-
-                    router.push(`/category/${item.id}`);
-                  }}
-                  style={[
-                    styles.card,
-                    {
-                      width: ITEM_SIZE,
-                      marginRight: isLastColumn ? 0 : COLUMN_GAP,
-                      marginBottom: ROW_GAP,
-                    },
-                  ]}
-                >
-                  <Image source={imageSource} style={styles.image} />
-
-                  <ThemedText style={styles.cardText}>
-                    {item.name}
-                  </ThemedText>
-                </Pressable>
+              console.log('URL productos:', url);
+              console.log(
+                `Hijos de "${category.name}"`,
+                children.map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                }))
               );
-            })}
-        </View>
+
+              setView({
+                type: 'CATEGORY',
+                category,
+              });
+            }}
+          />
+        )}
+
+        {/* ===== CATEGORY VIEW ===== */}
+        {!loading && view.type === 'CATEGORY' && (
+          <>
+            <Pressable
+              onPress={() => setView({ type: 'ROOT' })}
+            >
+              <ThemedText style={styles.back}>
+                ← Volver
+              </ThemedText>
+            </Pressable>
+
+            <ThemedText style={styles.title}>
+              {view.category.name}
+            </ThemedText>
+
+            <CategoryGrid
+              categories={getChildren(view.category.id)}
+              onPress={(subcategory) => {
+                const url = buildProductUrl(subcategory.id);
+                const children = getChildren(subcategory.id);
+
+                console.log('URL productos:', url);
+                console.log(
+                  `Hijos de "${subcategory.name}"`,
+                  children.map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                  }))
+                );
+              }}
+            />
+          </>
+        )}
       </ScrollView>
     </ThemedView>
   );
 }
 
-/* ===== STYLES ===== */
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: PADDING,
+    padding: 24,
   },
-
   scroll: {
     paddingBottom: 40,
   },
-
-  /* 👇 separa el search del contenido */
   searchContainer: {
     marginBottom: 20,
   },
-
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
+  back: {
+    marginBottom: 12,
   },
-
-  card: {
-    alignItems: 'center',
-  },
-
-  image: {
-    width: ITEM_SIZE,
-    height: ITEM_SIZE,
-    borderRadius: 14,
-  },
-
-  cardText: {
-    marginTop: 6,
-    fontSize: 12,
-    textAlign: 'center',
+  title: {
+    fontSize: 18,
+    marginBottom: 16,
   },
 });
