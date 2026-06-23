@@ -1,9 +1,9 @@
 import { ThemedText } from '@/components/themed-text';
 import React from 'react';
 import {
-    Pressable,
-    StyleSheet,
-    ViewStyle,
+  Pressable,
+  StyleSheet,
+  ViewStyle,
 } from 'react-native';
 
 type Props = {
@@ -46,6 +46,9 @@ const styles = StyleSheet.create({
     borderColor: '#999',
     alignItems: 'center',
     justifyContent: 'center',
+
+    alignSelf: 'flex-start',
+    width: 'auto',
   },
   pressed: {
     opacity: 0.5,

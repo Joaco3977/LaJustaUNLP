@@ -1,3 +1,4 @@
+import { AnimatedButton } from '@/components/animated-button';
 import { ThemedText } from '@/components/themed-text';
 import { Colors } from '@/constants/theme';
 import { useEffect, useState } from 'react';
@@ -61,11 +62,12 @@ export function ProductDetail({ productId, onClose }: Props) {
   return (
     <View style={[styles.overlay, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.container}>
-
-        {/* CLOSE BUTTON */}
-        <ThemedText onPress={onClose} style={styles.close}>
-          ✕ Cerrar
-        </ThemedText>
+        
+        <AnimatedButton
+          title="← Volver"
+          onPress={onClose}
+          style={styles.close}
+        />
 
         <Image source={image} style={styles.image} />
 
