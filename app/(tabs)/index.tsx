@@ -9,7 +9,7 @@ export default function HomeScreen() {
       <ThemedText type="title">Work in Progress</ThemedText>
 
       <ThemedText type="subtitle" style={styles.subtitle}>
-        Aquí se construirá la sección Cuenta
+        Aquí se construirá la sección Inicio
       </ThemedText>
 
       <ThemedText type="default" style={styles.note}>
