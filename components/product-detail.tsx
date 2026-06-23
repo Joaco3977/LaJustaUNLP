@@ -59,10 +59,24 @@ export function ProductDetail({ productId, onClose }: Props) {
       ? `${product.unitQuantity} ${product.unit.code}`
       : null;
 
+  const Section = ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) => (
+    <View style={[styles.card, { backgroundColor: theme.card }]}>
+      <ThemedText style={[styles.label, { color: theme.text }]}>
+        {title}
+      </ThemedText>
+      {children}
+    </View>
+  );
+
   return (
     <View style={[styles.overlay, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.container}>
-        
         <AnimatedButton
           title="← Volver"
           onPress={onClose}
@@ -71,47 +85,69 @@ export function ProductDetail({ productId, onClose }: Props) {
 
         <Image source={image} style={styles.image} />
 
-        <ThemedText style={styles.price}>
+        <ThemedText style={[styles.price, { color: theme.text }]}>
           ${product.price}
         </ThemedText>
 
+        {/* DESCRIPCIÓN */}
         {!!product.description && (
-          <ThemedText style={styles.section}>
-            {product.description}
-          </ThemedText>
+          <Section title="Descripción">
+            <ThemedText style={[styles.value, { color: theme.subtext }]}>
+              {product.description}
+            </ThemedText>
+          </Section>
         )}
 
+        {/* PRODUCTOR */}
         {!!product.producer?.name && (
-          <ThemedText style={styles.section}>
-            Productor: {product.producer.name}
-          </ThemedText>
+          <Section title="Productor">
+            <ThemedText style={[styles.value, { color: theme.subtext }]}>
+              {product.producer.name}
+            </ThemedText>
+          </Section>
         )}
 
+        {/* CATEGORÍAS */}
         {!!product.categories?.length && (
-          <View style={styles.section}>
-            <ThemedText>Categorías:</ThemedText>
+          <Section title="Categorías">
             {product.categories.map((c) => (
-              <ThemedText key={c.id}>• {c.name}</ThemedText>
+              <ThemedText
+                key={c.id}
+                style={[styles.value, { color: theme.subtext }]}
+              >
+                • {c.name}
+              </ThemedText>
             ))}
-          </View>
+          </Section>
         )}
 
+        {/* MARCA */}
         {!!product.brand && (
-          <ThemedText style={styles.section}>
-            Marca: {product.brand}
-          </ThemedText>
+          <Section title="Marca">
+            <ThemedText style={[styles.value, { color: theme.subtext }]}>
+              {product.brand}
+            </ThemedText>
+          </Section>
         )}
 
+        {/* UNIDAD */}
         {!!unitInfo && (
-          <ThemedText style={styles.section}>
-            Unidad: {unitInfo}
-            {product.unitDescription ? ` (${product.unitDescription})` : ''}
-          </ThemedText>
+          <Section title="Unidad">
+            <ThemedText style={[styles.value, { color: theme.subtext }]}>
+              {product.unitQuantity}
+              {product.unitDescription
+                ? ` (${product.unitDescription})`
+                : ''}
+            </ThemedText>
+          </Section>
         )}
 
-        <ThemedText style={styles.section}>
-          Stock disponible: {product.stock ?? 0}
-        </ThemedText>
+        {/* STOCK */}
+        <Section title="Stock disponible">
+          <ThemedText style={[styles.value, { color: theme.subtext }]}>
+            {product.stock ?? 0} unidades
+          </ThemedText>
+        </Section>
       </ScrollView>
     </View>
   );
@@ -136,18 +172,30 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: 250,
-    borderRadius: 12,
+    borderRadius: 14,
     marginBottom: 12,
   },
 
   price: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 10,
+    fontSize: 26,
+    fontWeight: '800',
+    marginBottom: 14,
   },
 
-  section: {
-    marginTop: 8,
+  card: {
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+
+  label: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+
+  value: {
     fontSize: 14,
+    lineHeight: 20,
   },
 });
