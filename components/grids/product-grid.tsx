@@ -10,7 +10,7 @@ import {
   useColorScheme,
 } from 'react-native';
 
-const noImage = require('@/assets/images/no-image.jpg');
+const noImage = require('@/assets/images/no-image.png');
 
 type ProductImage = {
   value: string;
@@ -32,19 +32,18 @@ type Product = {
   images?: ProductImage[];
 };
 
+type Props = {
+  products: Product[];
+  onSelectProduct: (id: number) => void;
+};
+
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const PADDING = 24;
 const GAP = 12;
 
 const ITEM_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP) / 2;
 
-type Props = {
-  products: Product[];
-};
-
-const getProductImage = (
-  images?: ProductImage[]
-): ImageSourcePropType => {
+const getProductImage = (images?: ProductImage[]): ImageSourcePropType => {
   const imageUrl = images?.[0]?.value;
   return imageUrl ? { uri: imageUrl } : noImage;
 };
@@ -54,7 +53,7 @@ const formatUnitInfo = (product: Product) => {
   return `${product.unitQuantity} ${product.unit.code}`;
 };
 
-export function ProductGrid({ products }: Props) {
+export function ProductGrid({ products, onSelectProduct }: Props) {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
 
@@ -66,6 +65,7 @@ export function ProductGrid({ products }: Props) {
         return (
           <Pressable
             key={item.id}
+            onPress={() => onSelectProduct(item.id)}
             style={[
               styles.card,
               {
@@ -120,43 +120,29 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: GAP,
   },
-
   card: {
     width: ITEM_WIDTH,
     borderRadius: 14,
     borderWidth: 1,
     overflow: 'hidden',
-
-    // sombra iOS
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-
-    // sombra Android
     elevation: 2,
   },
-
   image: {
     width: '100%',
     height: ITEM_WIDTH,
   },
-
   content: {
     padding: 10,
     gap: 2,
   },
-
   title: {
     fontSize: 12,
     fontWeight: '600',
   },
-
   meta: {
     fontSize: 11,
     opacity: 0.7,
   },
-
   price: {
     fontSize: 14,
     fontWeight: '700',

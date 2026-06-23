@@ -1,20 +1,16 @@
 import { useEffect, useState } from 'react';
-import {
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Modal, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { CategoryGrid } from '@/components/grids/category-grid';
 import { ProductGrid } from '@/components/grids/product-grid';
+import { ProductDetail } from '@/components/product-detail';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 import {
   Category,
-  buildAllProductsUrl,
   buildProductUrl,
   useCategories,
 } from '@/hooks/use-categories';
@@ -22,195 +18,146 @@ import {
 const PAGE_SIZE = 12;
 
 export default function ProductsScreen() {
-  const { rootCategories, getChildren, loading } =
-    useCategories();
+  const { rootCategories, getChildren } = useCategories();
 
-  /* ===== CATEGORY STATE ===== */
-  const [selectedCategory, setSelectedCategory] =
-    useState<Category | null>(null);
+  /* ================= CATEGORY STACK ================= */
+  const [categoryStack, setCategoryStack] = useState<Category[]>([]);
 
-  /* ===== PRODUCTS STATE ===== */
+  const currentCategory = categoryStack.at(-1) ?? null;
+  const isRoot = currentCategory === null;
+
+  /* ================= PRODUCTS ================= */
   const [products, setProducts] = useState<any[]>([]);
-  const [totalElements, setTotalElements] =
-    useState<number>(0);
-  const [loadingProducts, setLoadingProducts] =
-    useState(false);
-
-  /* ===== PAGINATION ===== */
   const [page, setPage] = useState(0);
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(totalElements / PAGE_SIZE)
-  );
+  /* ================= PRODUCT DETAIL ================= */
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
-  const isRoot = selectedCategory === null;
-
-  const subcategories = selectedCategory
-    ? getChildren(selectedCategory.id)
+  const subcategories = currentCategory
+    ? getChildren(currentCategory.id)
     : [];
 
-  /* =========================================================
-     FIX REAL DEL BACKEND: range=page,size
-  ========================================================= */
+  /* ================= FETCH ================= */
   const fetchUrl = (categoryId: number, page: number) => {
-    const base =
-      categoryId === 0
-        ? buildAllProductsUrl()
-        : buildProductUrl(categoryId);
-
-    const url = new URL(base);
-
+    const url = new URL(buildProductUrl(categoryId));
     url.searchParams.set('range', `${page},${PAGE_SIZE}`);
-
     return url.toString();
   };
 
-  /* ===== FETCH PRODUCTS ===== */
   useEffect(() => {
-    if (!selectedCategory) return;
+    if (!currentCategory) return;
 
-    const fetchProducts = async () => {
-      setLoadingProducts(true);
+    fetch(fetchUrl(currentCategory.id, page))
+      .then((res) => res.json())
+      .then((json) => setProducts(json.page ?? []))
+      .catch(console.error);
+  }, [currentCategory, page]);
 
-      try {
-        const url = fetchUrl(
-          selectedCategory.id,
-          page
-        );
-
-        const res = await fetch(url);
-        const json = await res.json();
-
-        setProducts(json.page ?? []);
-        setTotalElements(json.totalElements ?? 0);
-      } catch (e) {
-        console.error('Error productos', e);
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-
-    fetchProducts();
-  }, [selectedCategory, page]);
-
-  /* ===== CLICK CATEGORY ===== */
-  const handlePress = (category: Category) => {
-    setSelectedCategory(category);
+  /* ================= CATEGORY CLICK ================= */
+  const handleSelectCategory = (category: Category) => {
+    setCategoryStack((prev) => [...prev, category]);
     setPage(0);
+    setSelectedProductId(null);
   };
 
-  /* ===== BACK ===== */
+  /* ================= BACK ================= */
   const handleBack = () => {
-    setSelectedCategory(null);
-    setProducts([]);
+    setCategoryStack((prev) => prev.slice(0, -1));
     setPage(0);
-    setTotalElements(0);
+    setSelectedProductId(null);
   };
-
-  const title = selectedCategory?.name;
 
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* SEARCH */}
+
         <View style={styles.searchContainer}>
           <SearchBar />
         </View>
 
-        {/* BACK */}
-        {!isRoot && (
-          <AnimatedButton
-            title="← Volver"
-            onPress={handleBack}
-            style={styles.backButton}
-          />
-        )}
-
-        {/* ROOT VIEW */}
+        {/* ROOT CATEGORIES */}
         {isRoot && (
           <CategoryGrid
             categories={rootCategories}
-            onPress={handlePress}
+            onPress={handleSelectCategory}
           />
         )}
 
         {/* CATEGORY VIEW */}
         {!isRoot && (
           <>
-            {/* TITLE */}
+            {/* BACK */}
+            <AnimatedButton
+              title="← Volver"
+              onPress={handleBack}
+              style={styles.backButton}
+            />
+
             <ThemedText style={styles.title}>
-              {title}
+              {currentCategory?.name}
             </ThemedText>
 
             {/* SUBCATEGORIES */}
             {subcategories.length > 0 && (
               <CategoryGrid
                 categories={subcategories}
-                onPress={handlePress}
+                onPress={handleSelectCategory}
               />
             )}
 
             {/* PRODUCTS */}
-            {loadingProducts ? (
-              <ThemedText>
-                Cargando productos...
-              </ThemedText>
-            ) : products.length > 0 ? (
-              <ProductGrid products={products} />
-            ) : (
-              <ThemedText>
-                No hay productos disponibles
-              </ThemedText>
-            )}
+            <ProductGrid
+              products={products}
+              onSelectProduct={setSelectedProductId}
+            />
 
             {/* PAGINATION */}
-            {products.length > 0 && (
-              <View style={styles.pagination}>
-                {/* LEFT */}
-                {page > 0 ? (
-                  <AnimatedButton
-                    title="← Anterior"
-                    onPress={() => setPage(page - 1)}
-                  />
-                ) : (
-                  <View style={{ width: 100 }} />
-                )}
+            <View style={styles.pagination}>
+              {page > 0 ? (
+                <AnimatedButton
+                  title="← Anterior"
+                  onPress={() => setPage(page - 1)}
+                />
+              ) : (
+                <View style={{ width: 100 }} />
+              )}
 
-                {/* CENTER */}
-                <ThemedText style={styles.pageText}>
-                  Página {page + 1}
-                </ThemedText>
+              <ThemedText>Página {page + 1}</ThemedText>
 
-                {/* RIGHT */}
-                {products.length === PAGE_SIZE ? (
-                  <AnimatedButton
-                    title="Siguiente →"
-                    onPress={() => setPage(page + 1)}
-                  />
-                ) : (
-                  <View style={{ width: 100 }} />
-                )}
-              </View>
-            )}
+              {products.length === PAGE_SIZE ? (
+                <AnimatedButton
+                  title="Siguiente →"
+                  onPress={() => setPage(page + 1)}
+                />
+              ) : (
+                <View style={{ width: 100 }} />
+              )}
+            </View>
           </>
         )}
       </ScrollView>
+
+      {/* MODAL PRODUCT DETAIL */}
+      <Modal
+        visible={selectedProductId !== null}
+        animationType="slide"
+        onRequestClose={() => setSelectedProductId(null)}
+      >
+        {selectedProductId !== null && (
+          <ProductDetail
+            productId={selectedProductId}
+            onClose={() => setSelectedProductId(null)}
+          />
+        )}
+      </Modal>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 24,
-  },
-  scroll: {
-    paddingBottom: 40,
-  },
-  searchContainer: {
-    marginBottom: 20,
-  },
+  container: { flex: 1, padding: 24 },
+  scroll: { paddingBottom: 40 },
+  searchContainer: { marginBottom: 20 },
   backButton: {
     alignSelf: 'flex-start',
     marginBottom: 12,
@@ -224,9 +171,5 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 20,
-  },
-  pageText: {
-    fontSize: 14,
-    fontWeight: '500',
   },
 });
