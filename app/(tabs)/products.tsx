@@ -1,11 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { CategoryGrid } from '@/components/grids/category-grid';
@@ -14,6 +8,8 @@ import { ProductDetail } from '@/components/product-detail';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+
+import { CustomModal } from '@/components/ui/custom-modal';
 
 import {
   Category,
@@ -36,10 +32,6 @@ export default function ProductsScreen() {
 
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
-  // 🎬 Animaciones modal
-  const modalOpacity = useRef(new Animated.Value(0)).current;
-  const modalTranslate = useRef(new Animated.Value(50)).current;
-
   const subcategories = currentCategory
     ? getChildren(currentCategory.id)
     : [];
@@ -51,13 +43,20 @@ export default function ProductsScreen() {
   };
 
   useEffect(() => {
-    if (!currentCategory) return;
-
     const fetchProducts = async () => {
       setLoadingProducts(true);
 
       try {
-        const res = await fetch(fetchUrl(currentCategory.id, page));
+        const baseUrl = currentCategory
+          ? buildProductUrl(currentCategory.id)
+          : buildProductUrl(); // 👈 TODOS
+
+        const url = new URL(baseUrl);
+        url.searchParams.set('range', `${page},${PAGE_SIZE}`);
+
+        console.log('🌐 FINAL URL:', url.toString());
+
+        const res = await fetch(url.toString());
         const json = await res.json();
 
         setProducts(json.page ?? []);
@@ -71,40 +70,12 @@ export default function ProductsScreen() {
     fetchProducts();
   }, [currentCategory, page]);
 
-  // 🟢 OPEN MODAL
   const openProduct = (id: number) => {
     setSelectedProductId(id);
-
-    Animated.parallel([
-      Animated.timing(modalOpacity, {
-        toValue: 1,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(modalTranslate, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start();
   };
 
-  // 🔴 CLOSE MODAL
   const closeProduct = () => {
-    Animated.parallel([
-      Animated.timing(modalOpacity, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(modalTranslate, {
-        toValue: 50,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      setSelectedProductId(null);
-    });
+    setSelectedProductId(null);
   };
 
   const handleSelectCategory = (category: Category) => {
@@ -199,36 +170,18 @@ export default function ProductsScreen() {
         )}
       </ScrollView>
 
-      {/* 🧠 CUSTOM OVERLAY MODAL */}
-      {selectedProductId !== null && (
-        <Animated.View
-          style={[
-            styles.modalOverlay,
-            { opacity: modalOpacity },
-          ]}
-        >
-          {/* BACKDROP */}
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={closeProduct}
+      {/* CUSTOM MODAL */}
+      <CustomModal
+        visible={selectedProductId !== null}
+        onClose={closeProduct}
+      >
+        {selectedProductId !== null && (
+          <ProductDetail
+            productId={selectedProductId}
+            onClose={closeProduct}
           />
-
-          {/* CONTENT */}
-          <Animated.View
-            style={[
-              styles.modalContent,
-              {
-                transform: [{ translateY: modalTranslate }],
-              },
-            ]}
-          >
-            <ProductDetail
-              productId={selectedProductId}
-              onClose={closeProduct}
-            />
-          </Animated.View>
-        </Animated.View>
-      )}
+        )}
+      </CustomModal>
     </ThemedView>
   );
 }
@@ -260,17 +213,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.7,
     textAlign: 'center',
-  },
-
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-  },
-
-  modalContent: {
-    height: '100%',
-    overflow: 'hidden',
-    backgroundColor: '#fff',
   },
 });

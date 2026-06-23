@@ -12,15 +12,22 @@ const CATEGORY_ENDPOINT =
   'https://www.lajustaunlp.com.ar/api/category?properties=%5B%7B%22key%22%3A%22deletedAt%22%2C%22value%22%3A%22%22%7D%5D&sort=id%2CASC';
 
 /* ===== PRODUCT URL (por categoría) ===== */
-export const buildProductUrl = (categoryId: number) => {
-  const properties = encodeURIComponent(
-    JSON.stringify([
-      { key: 'categories.id', value: categoryId },
-      { key: 'deletedAt', value: 'null' },
-    ])
-  );
+export const buildProductUrl = (categoryId?: number) => {
+  const properties: any[] = [
+    { key: 'deletedAt', value: 'null' },
+  ];
 
-  return `https://www.lajustaunlp.com.ar/api/product?properties=${properties}&range=0,12&sort=id,ASC`;
+  // SOLO agregar filtro si NO es "Todos"
+  if (categoryId && categoryId > 0) {
+    properties.push({
+      key: 'categories.id',
+      value: categoryId,
+    });
+  }
+
+  const encoded = encodeURIComponent(JSON.stringify(properties));
+
+  return `https://www.lajustaunlp.com.ar/api/product?properties=${encoded}&range=0,12&sort=id,ASC`;
 };
 
 /* ===== PRODUCT URL (TODOS) ===== */
