@@ -13,6 +13,7 @@ import { CustomModal } from '@/components/ui/custom-modal';
 
 import {
   Category,
+  buildAllProductsUrl,
   buildProductUrl,
   useCategories,
 } from '@/hooks/use-categories';
@@ -32,29 +33,30 @@ export default function ProductsScreen() {
 
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
+  // SEARCH
+  const [searchText, setSearchText] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
   const subcategories = currentCategory
     ? getChildren(currentCategory.id)
     : [];
 
-  const fetchUrl = (categoryId: number, page: number) => {
-    const url = new URL(buildProductUrl(categoryId));
-    url.searchParams.set('range', `${page},${PAGE_SIZE}`);
-    return url.toString();
-  };
-
+  // =========================
+  // FETCH CATEGORY / ALL
+  // =========================
   useEffect(() => {
+    if (isSearching) return;
+
     const fetchProducts = async () => {
       setLoadingProducts(true);
 
       try {
         const baseUrl = currentCategory
           ? buildProductUrl(currentCategory.id)
-          : buildProductUrl(); // 👈 TODOS
+          : buildAllProductsUrl(); // 👈 FIX REAL "TODOS"
 
         const url = new URL(baseUrl);
         url.searchParams.set('range', `${page},${PAGE_SIZE}`);
-
-        console.log('🌐 FINAL URL:', url.toString());
 
         const res = await fetch(url.toString());
         const json = await res.json();
@@ -68,48 +70,97 @@ export default function ProductsScreen() {
     };
 
     fetchProducts();
-  }, [currentCategory, page]);
+  }, [currentCategory, page, isSearching]);
 
-  const openProduct = (id: number) => {
-    setSelectedProductId(id);
+  // =========================
+  // SEARCH (FIX FILTER)
+  // =========================
+  const executeSearch = async () => {
+    const text = searchText.trim();
+
+    if (!text) {
+      setIsSearching(false);
+      return;
+    }
+
+    try {
+      setLoadingProducts(true);
+      setIsSearching(true);
+
+      const url = new URL('https://www.lajustaunlp.com.ar/api/product');
+
+      url.searchParams.set('filter', `"${text}"`);
+
+      url.searchParams.set(
+        'properties',
+        JSON.stringify([
+          { key: 'deletedAt', value: 'null' },
+        ])
+      );
+
+      url.searchParams.set('range', `0,${PAGE_SIZE}`);
+      url.searchParams.set('sort', 'id,ASC');
+
+      const res = await fetch(url.toString());
+      const json = await res.json();
+
+      setProducts(json.page ?? []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingProducts(false);
+    }
   };
 
-  const closeProduct = () => {
-    setSelectedProductId(null);
-  };
+  const openProduct = (id: number) => setSelectedProductId(id);
+  const closeProduct = () => setSelectedProductId(null);
 
   const handleSelectCategory = (category: Category) => {
+    setSearchText('');
+    setIsSearching(false);
     setCategoryStack((prev) => [...prev, category]);
     setPage(0);
-    setSelectedProductId(null);
   };
 
   const handleBack = () => {
+    setSearchText('');
+    setIsSearching(false);
     setCategoryStack((prev) => prev.slice(0, -1));
     setPage(0);
-    setSelectedProductId(null);
   };
 
-  const hasProducts = products.length > 0;
+  const showProducts =
+    (isSearching || !isRoot || categoryStack.length > 0);
+
+  const showEmptyState =
+    showProducts && !loadingProducts && products.length === 0;
 
   return (
     <ThemedView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scroll}>
 
+        {/* SEARCH */}
         <View style={styles.searchContainer}>
-          <SearchBar />
+          <SearchBar
+            value={searchText}
+            onChangeText={(t) => {
+              setSearchText(t);
+              setIsSearching(false);
+            }}
+            onSubmit={executeSearch}
+          />
         </View>
 
-        {/* ROOT */}
-        {isRoot && (
+        {/* ROOT CATEGORIES */}
+        {isRoot && !isSearching && (
           <CategoryGrid
             categories={rootCategories}
             onPress={handleSelectCategory}
           />
         )}
 
-        {/* CATEGORY VIEW */}
-        {!isRoot && (
+        {/* CATEGORY HEADER */}
+        {!isRoot && !isSearching && (
           <>
             <AnimatedButton
               title="← Volver"
@@ -127,50 +178,55 @@ export default function ProductsScreen() {
                 onPress={handleSelectCategory}
               />
             )}
-
-            {/* LOADING */}
-            {loadingProducts ? (
-              <ThemedText>Cargando productos...</ThemedText>
-            ) : hasProducts ? (
-              <>
-                <ProductGrid
-                  products={products}
-                  onSelectProduct={openProduct}
-                />
-
-                {/* PAGINATION */}
-                <View style={styles.pagination}>
-                  {page > 0 ? (
-                    <AnimatedButton
-                      title="← Anterior"
-                      onPress={() => setPage(page - 1)}
-                    />
-                  ) : (
-                    <View style={{ width: 100 }} />
-                  )}
-
-                  <ThemedText>Página {page + 1}</ThemedText>
-
-                  {products.length === PAGE_SIZE ? (
-                    <AnimatedButton
-                      title="Siguiente →"
-                      onPress={() => setPage(page + 1)}
-                    />
-                  ) : (
-                    <View style={{ width: 100 }} />
-                  )}
-                </View>
-              </>
-            ) : (
-              <ThemedText style={styles.empty}>
-                Actualmente no hay productos disponibles en la categoría seleccionada
-              </ThemedText>
-            )}
           </>
         )}
+
+        {/* PRODUCTS (FIX: NO ROOT EMPTY GHOST GRID) */}
+        {showProducts && (
+          loadingProducts ? (
+            <ThemedText>Cargando productos...</ThemedText>
+          ) : (
+            <ProductGrid
+              products={products}
+              onSelectProduct={openProduct}
+            />
+          )
+        )}
+
+        {showEmptyState && (
+          <ThemedText style={styles.empty}>
+            No se encontraron productos
+          </ThemedText>
+        )}
+
+        {/* PAGINATION SOLO CATEGORÍA */}
+        {!isSearching && !isRoot && (
+          <View style={styles.pagination}>
+            {page > 0 ? (
+              <AnimatedButton
+                title="← Anterior"
+                onPress={() => setPage(page - 1)}
+              />
+            ) : (
+              <View style={{ width: 100 }} />
+            )}
+
+            <ThemedText>Página {page + 1}</ThemedText>
+
+            {products.length === PAGE_SIZE ? (
+              <AnimatedButton
+                title="Siguiente →"
+                onPress={() => setPage(page + 1)}
+              />
+            ) : (
+              <View style={{ width: 100 }} />
+            )}
+          </View>
+        )}
+
       </ScrollView>
 
-      {/* CUSTOM MODAL */}
+      {/* MODAL */}
       <CustomModal
         visible={selectedProductId !== null}
         onClose={closeProduct}

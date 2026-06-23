@@ -3,17 +3,28 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { StyleSheet, TextInput, View } from 'react-native';
 
-export function SearchBar() {
+type Props = {
+  value: string;
+  onChangeText: (text: string) => void;
+  onSubmit?: () => void;
+};
+
+export function SearchBar({ value, onChangeText, onSubmit }: Props) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
       <IconSymbol name="magnifyingglass" size={20} color={colors.text} />
+
       <TextInput
+        value={value}
+        onChangeText={onChangeText}
         placeholder="Buscar productos..."
         placeholderTextColor={colors.text + '99'}
         style={[styles.input, { color: colors.text }]}
+        returnKeyType="search"
+        onSubmitEditing={onSubmit}
       />
     </View>
   );
