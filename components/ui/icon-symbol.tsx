@@ -14,7 +14,7 @@ type IconSymbolName = keyof typeof MAPPING;
 
 /**
  * En esta seccion agregar el mapeo de SF a Android, siguiendo estas reglas:
- * - ver Material Icons en (https://icons.expo.fyi).
+ * - ver Material Icons en (https://icons.expo.fyi) con el filtro de Material Icons.
  * - ver SF Symbols en (https://developer.apple.com/sf-symbols/).
  */
 const MAPPING = {
@@ -24,6 +24,7 @@ const MAPPING = {
   'gearshape.fill': 'settings',
   'cart.fill': 'shopping-cart', // Para carrito, un icono de carrito de compras.
   'heart.fill': 'favorite', // Para nosotros, un icono de corazón.
+  'shippingbox.fill': 'inventory', // Para productos, un icono de caja de envío.
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
 } as IconMapping;

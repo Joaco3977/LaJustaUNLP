@@ -57,6 +57,16 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="products"
+        options={{
+          title: 'Productos',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={28} name="shippingbox.fill" color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="producers"
         options={{
           title: 'Productores',
