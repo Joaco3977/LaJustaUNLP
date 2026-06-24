@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { CategoryGrid } from '@/components/grids/category-grid';
@@ -19,6 +19,13 @@ import {
 
 const PAGE_SIZE = 12;
 
+type SortOption =
+  | 'default'
+  | 'price_asc'
+  | 'price_desc'
+  | 'name_asc'
+  | 'name_desc';
+
 export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
 
@@ -36,25 +43,36 @@ export default function ProductsScreen() {
   const [searchText, setSearchText] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
+  // SORT DROPDOWN
+  const [sortOption, setSortOption] = useState<SortOption>('default');
+  const [sortOpen, setSortOpen] = useState(false);
+
   const subcategories = currentCategory
     ? getChildren(currentCategory.id)
     : [];
 
-  // =========================
-  // IDLE
-  // =========================
   const isIdle = isRoot && !isSearching && categoryStack.length === 0;
 
   const mode: 'idle' | 'category' | 'search' =
-    isSearching
-      ? 'search'
-      : isIdle
-        ? 'idle'
-        : 'category';
+    isSearching ? 'search' : isIdle ? 'idle' : 'category';
 
-  // =========================
-  // FETCH ÚNICO
-  // =========================
+  // SORT MAP
+  const sortParam: Record<SortOption, string> = {
+    default: 'id,ASC',
+    price_asc: 'price,ASC',
+    price_desc: 'price,DESC',
+    name_asc: 'title,ASC',
+    name_desc: 'title,DESC',
+  };
+
+  const sortLabel: Record<SortOption, string> = {
+    default: 'Predeterminado',
+    price_asc: 'Precio ↑',
+    price_desc: 'Precio ↓',
+    name_asc: 'A → Z',
+    name_desc: 'Z → A',
+  };
+
   useEffect(() => {
     if (mode === 'idle') return;
 
@@ -84,7 +102,7 @@ export default function ProductsScreen() {
         }
 
         url.searchParams.set('range', `${page},${PAGE_SIZE}`);
-        url.searchParams.set('sort', 'id,ASC');
+        url.searchParams.set('sort', sortParam[sortOption]);
 
         const res = await fetch(url.toString());
         const json = await res.json();
@@ -98,11 +116,8 @@ export default function ProductsScreen() {
     };
 
     fetchProducts();
-  }, [mode, page, currentCategory, searchText]);
+  }, [mode, page, currentCategory, searchText, sortOption]);
 
-  // =========================
-  // HANDLERS
-  // =========================
   const openProduct = (id: number) => setSelectedProductId(id);
   const closeProduct = () => setSelectedProductId(null);
 
@@ -143,14 +158,8 @@ export default function ProductsScreen() {
     setIsSearching(true);
   };
 
-  // =========================
-  // UI LOGIC
-  // =========================
   const showProducts = !isIdle;
-
-  const showPagination =
-    !isIdle && products.length > 0;
-
+  const showPagination = !isIdle && products.length > 0;
   const showEmptyState =
     showProducts && !loadingProducts && products.length === 0;
 
@@ -170,7 +179,7 @@ export default function ProductsScreen() {
           />
         </View>
 
-        {/* HEADER + BACK */}
+        {/* HEADER */}
         {(!isRoot || isSearching) && (
           <>
             <AnimatedButton
@@ -196,7 +205,7 @@ export default function ProductsScreen() {
           </>
         )}
 
-        {/* ROOT CATEGORIES */}
+        {/* ROOT */}
         {isRoot && !isSearching && (
           <CategoryGrid
             categories={rootCategories}
@@ -204,17 +213,60 @@ export default function ProductsScreen() {
           />
         )}
 
+        {/* DROPDOWN SORT */}
+        {products.length > 0 && (
+          <View style={styles.sortContainer}>
+
+            <Pressable
+              onPress={() => setSortOpen((v) => !v)}
+              style={styles.dropdownHeader}
+            >
+              <ThemedText style={styles.dropdownHeaderText}>
+                Ordenar por...
+              </ThemedText>
+              <ThemedText>▼</ThemedText>
+            </Pressable>
+
+            {sortOpen && (
+              <View style={styles.dropdown}>
+                {(Object.keys(sortLabel) as SortOption[]).map((key) => (
+                  <Pressable
+                    key={key}
+                    onPress={() => {
+                      setSortOption(key);
+                      setPage(0);
+                      setSortOpen(false);
+                    }}
+                    style={[
+                      styles.dropdownItem,
+                      sortOption === key && styles.dropdownItemActive,
+                    ]}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.dropdownText,
+                        sortOption === key && styles.dropdownTextActive,
+                      ]}
+                    >
+                      {sortLabel[key]}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* PRODUCTS */}
-        {showProducts && (
-          loadingProducts ? (
+        {showProducts &&
+          (loadingProducts ? (
             <ThemedText>Cargando productos...</ThemedText>
           ) : (
             <ProductGrid
               products={products}
               onSelectProduct={openProduct}
             />
-          )
-        )}
+          ))}
 
         {/* EMPTY */}
         {showEmptyState && (
@@ -269,6 +321,7 @@ export default function ProductsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
   scroll: { paddingBottom: 40 },
+
   searchContainer: { marginBottom: 20 },
 
   backButton: {
@@ -293,5 +346,58 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.7,
     textAlign: 'center',
+  },
+
+  sortContainer: {
+    marginBottom: 12,
+    zIndex: 10,
+  },
+
+  sortLabel: {
+    marginBottom: 6,
+    fontSize: 14,
+    opacity: 0.7,
+  },
+
+  dropdownHeader: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  dropdownHeaderText: {
+    fontSize: 13,
+  },
+
+  dropdown: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    marginTop: 6,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+  },
+
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  dropdownItemActive: {
+    backgroundColor: '#16a34a',
+  },
+
+  dropdownText: {
+    fontSize: 13,
+    color: '#374151',
+  },
+
+  dropdownTextActive: {
+    color: 'white',
+    fontWeight: '700',
   },
 });

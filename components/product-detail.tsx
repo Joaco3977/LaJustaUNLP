@@ -162,7 +162,7 @@ export function ProductDetail({ productId, onClose }: Props) {
           </ThemedText>
         </Section>
 
-        {/* 🔥 BLOQUE COMPRA DESTACADO */}
+        {/* BLOQUE COMPRA SEPARADO */}
         <View style={styles.buyContainer}>
           {stock === 0 ? (
             <ThemedText style={{ color: 'red', fontWeight: '600' }}>

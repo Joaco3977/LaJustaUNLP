@@ -9,6 +9,7 @@ type Props = {
   onSubmit?: () => void;
 };
 
+{/* BARRA DE BUSQUEDA */}
 export function SearchBar({ value, onChangeText, onSubmit }: Props) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
