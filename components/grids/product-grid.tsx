@@ -76,7 +76,7 @@ export function ProductGrid({ products, onSelectProduct }: Props) {
               },
             ]}
           >
-            {/* 🔴 SIN STOCK RIBBON */}
+            {/* LAZO DE SIN STOCK */}
             {outOfStock && (
               <View style={styles.outOfStockRibbon}>
                 <ThemedText style={styles.outOfStockText}>
