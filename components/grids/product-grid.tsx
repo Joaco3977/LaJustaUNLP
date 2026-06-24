@@ -30,6 +30,7 @@ type Product = {
   unitDescription?: string;
   unit?: Unit;
   images?: ProductImage[];
+  stock?: number; // ✅ agregado
 };
 
 type Props = {
@@ -61,6 +62,7 @@ export function ProductGrid({ products, onSelectProduct }: Props) {
     <View style={styles.grid}>
       {products.map((item) => {
         const unitInfo = formatUnitInfo(item);
+        const outOfStock = (item.stock ?? 0) === 0; // ✅ stock check
 
         return (
           <Pressable
@@ -74,6 +76,15 @@ export function ProductGrid({ products, onSelectProduct }: Props) {
               },
             ]}
           >
+            {/* 🔴 SIN STOCK RIBBON */}
+            {outOfStock && (
+              <View style={styles.outOfStockRibbon}>
+                <ThemedText style={styles.outOfStockText}>
+                  SIN STOCK
+                </ThemedText>
+              </View>
+            )}
+
             <Image
               source={getProductImage(item.images)}
               style={styles.image}
@@ -120,6 +131,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: GAP,
   },
+
   card: {
     width: ITEM_WIDTH,
     borderRadius: 14,
@@ -127,25 +139,50 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 2,
   },
+
   image: {
     width: '100%',
     height: ITEM_WIDTH,
   },
+
   content: {
     padding: 10,
     gap: 2,
   },
+
   title: {
     fontSize: 12,
     fontWeight: '600',
   },
+
   meta: {
     fontSize: 11,
     opacity: 0.7,
   },
+
   price: {
     fontSize: 14,
     fontWeight: '700',
     marginTop: 4,
+  },
+
+  //
+  outOfStockRibbon: {
+    position: 'absolute',
+    top: 10,
+    right: -35,
+    backgroundColor: 'red',
+    paddingVertical: 4,
+    paddingHorizontal: 40,
+    transform: [{ rotate: '45deg' }],
+    zIndex: 10,
+    elevation: 10,
+  },
+
+  outOfStockText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
