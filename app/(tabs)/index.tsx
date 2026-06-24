@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { ProductGrid } from '@/components/grids/product-grid';
@@ -9,8 +9,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CustomModal } from '@/components/ui/custom-modal';
 
+import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
+import { Colors } from '@/constants/theme';
+
 export default function HomeScreen() {
   const router = useRouter();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
 
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -20,10 +25,11 @@ export default function HomeScreen() {
   const [selectedProductId, setSelectedProductId] =
     useState<number | null>(null);
 
+  const [scrollY, setScrollY] = useState(0);
+
   const openProduct = (id: number) => setSelectedProductId(id);
   const closeProduct = () => setSelectedProductId(null);
 
-  // PROMOS
   useEffect(() => {
     const fetchPromotions = async () => {
       setLoading(true);
@@ -55,7 +61,6 @@ export default function HomeScreen() {
     fetchPromotions();
   }, []);
 
-  // BANNER
   useEffect(() => {
     const fetchBanner = async () => {
       try {
@@ -72,60 +77,70 @@ export default function HomeScreen() {
   }, []);
 
   return (
-    <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+    <ThemedView style={[styles.container, { backgroundColor: theme.background }]}>
+      
+      {banner && (
+        <View style={styles.bannerContainer}>
+          {banner.title && (
+            <ThemedText style={styles.bannerTitle}>
+              {banner.title}
+            </ThemedText>
+          )}
 
-        {/* BANNER */}
-        {banner && (
-          <View style={styles.bannerContainer}>
-            {banner.title && (
-              <ThemedText style={styles.bannerTitle}>
-                {banner.title}
-              </ThemedText>
-            )}
+          {banner.subtitle && (
+            <ThemedText style={styles.bannerSubtitle}>
+              {banner.subtitle}
+            </ThemedText>
+          )}
+        </View>
+      )}
 
-            {banner.subtitle && (
-              <ThemedText style={styles.bannerSubtitle}>
-                {banner.subtitle}
-              </ThemedText>
-            )}
-          </View>
-        )}
+      <View style={[styles.separator, { backgroundColor: theme.icon }]} />
 
-        <View style={styles.separator} />
+      <ThemedText style={styles.title}>
+        Destacados de la semana!
+      </ThemedText>
 
-        {/* TITLE */}
-        <ThemedText style={styles.title}>
-          Destacados de la semana!
-        </ThemedText>
+      <View style={styles.scrollWrapper}>
 
-        {/* CONTENT */}
-        {loading ? (
-          <ThemedText>Cargando promociones...</ThemedText>
-        ) : products.length > 0 ? (
-          <>
-            <ProductGrid
-              products={products}
-              onSelectProduct={openProduct}
-            />
-
-            {/* VER MAS */}
-            <View style={styles.moreContainer}>
-              <AnimatedButton
-                title="Ver más"
-                onPress={() => router.push('/(tabs)/products')}
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onScroll={(event) => {
+            setScrollY(event.nativeEvent.contentOffset.y);
+          }}
+        >
+          {loading ? (
+            <ThemedText>Cargando promociones...</ThemedText>
+          ) : products.length > 0 ? (
+            <>
+              <ProductGrid
+                products={products}
+                onSelectProduct={openProduct}
               />
-            </View>
-          </>
-        ) : (
-          <ThemedText style={styles.empty}>
-            No hay productos en promoción
-          </ThemedText>
-        )}
 
-      </ScrollView>
+              <View style={styles.moreContainer}>
+                <AnimatedButton
+                  title="Ver más"
+                  onPress={() => router.push('/(tabs)/products')}
+                />
+              </View>
+            </>
+          ) : (
+            <ThemedText style={styles.empty}>
+              No hay productos en promoción
+            </ThemedText>
+          )}
+        </ScrollView>
 
-      {/* MODAL PRODUCT DETAIL */}
+        <ScrollFadeOverlay
+          scrollY={scrollY}
+          color={theme.background}
+        />
+
+      </View>
+
       <CustomModal
         visible={selectedProductId !== null}
         onClose={closeProduct}
@@ -145,6 +160,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
+  },
+
+  scrollWrapper: {
+    flex: 1,
+    position: 'relative',
   },
 
   scroll: {
@@ -168,14 +188,7 @@ const styles = StyleSheet.create({
 
   separator: {
     height: 1,
-    backgroundColor: '#e5e7eb',
     marginVertical: 12,
-  },
-
-  subtitle: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 6,
   },
 
   title: {
@@ -194,6 +207,5 @@ const styles = StyleSheet.create({
     marginTop: 20,
     opacity: 0.6,
     textAlign: 'center',
-  }
-
+  },
 });
