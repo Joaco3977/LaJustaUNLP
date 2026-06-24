@@ -5,28 +5,26 @@ import { StyleSheet, View } from 'react-native';
 type Props = {
   scrollY: number;
   height?: number;
-  threshold?: number;
+  fadeRange?: number;
   color: string;
 };
 
 export function ScrollFadeOverlay({
   scrollY,
-  height = 24,
-  threshold = 80,
+  height = 28,
+  fadeRange = 120,
   color,
 }: Props) {
-  const clamped = Math.min(Math.max(scrollY / 0.01, 0), threshold);
-  const topOpacity = 1 - Math.pow(1 - clamped / threshold, 3);
+  // 0 → 1 suave (sin switch)
+  const topOpacity = Math.max(0, Math.min(scrollY / fadeRange, 1));
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      {/* TOP FADE */}
       <LinearGradient
         colors={[color, 'transparent']}
         style={[styles.top, { height, opacity: topOpacity }]}
       />
 
-      {/* BOTTOM FADE (siempre visible) */}
       <LinearGradient
         colors={['transparent', color]}
         style={[styles.bottom, { height }]}

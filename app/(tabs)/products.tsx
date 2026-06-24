@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  useColorScheme
+} from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { CategoryGrid } from '@/components/grids/category-grid';
@@ -9,6 +15,7 @@ import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CustomModal } from '@/components/ui/custom-modal';
+import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 
 import {
   Category,
@@ -16,6 +23,8 @@ import {
   buildProductUrl,
   useCategories,
 } from '@/hooks/use-categories';
+
+import { Colors } from '@/constants/theme';
 
 const PAGE_SIZE = 12;
 
@@ -29,6 +38,9 @@ type SortOption =
 export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
 
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+
   const [categoryStack, setCategoryStack] = useState<Category[]>([]);
   const currentCategory = categoryStack.at(-1) ?? null;
   const isRoot = currentCategory === null;
@@ -37,26 +49,36 @@ export default function ProductsScreen() {
   const [page, setPage] = useState(0);
   const [loadingProducts, setLoadingProducts] = useState(false);
 
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [selectedProductId, setSelectedProductId] =
+    useState<number | null>(null);
 
   // SEARCH
   const [searchText, setSearchText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
-  // SORT DROPDOWN
-  const [sortOption, setSortOption] = useState<SortOption>('default');
+  // SORT
+  const [sortOption, setSortOption] =
+    useState<SortOption>('default');
   const [sortOpen, setSortOpen] = useState(false);
+
+  // SCROLL
+  const [scrollY, setScrollY] = useState(0);
 
   const subcategories = currentCategory
     ? getChildren(currentCategory.id)
     : [];
 
-  const isIdle = isRoot && !isSearching && categoryStack.length === 0;
+  const isIdle =
+    isRoot && !isSearching && categoryStack.length === 0;
 
   const mode: 'idle' | 'category' | 'search' =
-    isSearching ? 'search' : isIdle ? 'idle' : 'category';
+    searchQuery.trim()
+      ? 'search'
+      : isIdle
+        ? 'idle'
+        : 'category';
 
-  // SORT MAP
   const sortParam: Record<SortOption, string> = {
     default: 'id,ASC',
     price_asc: 'price,ASC',
@@ -83,15 +105,19 @@ export default function ProductsScreen() {
         let url: URL;
 
         if (mode === 'search') {
-          const text = searchText.trim();
+          const text = searchQuery.trim();
           if (!text) return;
 
-          url = new URL('https://www.lajustaunlp.com.ar/api/product');
+          url = new URL(
+            'https://www.lajustaunlp.com.ar/api/product'
+          );
 
           url.searchParams.set('filter', `"${text}"`);
           url.searchParams.set(
             'properties',
-            JSON.stringify([{ key: 'deletedAt', value: 'null' }])
+            JSON.stringify([
+              { key: 'deletedAt', value: 'null' },
+            ])
           );
         } else {
           const baseUrl = currentCategory
@@ -101,8 +127,14 @@ export default function ProductsScreen() {
           url = new URL(baseUrl);
         }
 
-        url.searchParams.set('range', `${page},${PAGE_SIZE}`);
-        url.searchParams.set('sort', sortParam[sortOption]);
+        url.searchParams.set(
+          'range',
+          `${page},${PAGE_SIZE}`
+        );
+        url.searchParams.set(
+          'sort',
+          sortParam[sortOption]
+        );
 
         const res = await fetch(url.toString());
         const json = await res.json();
@@ -116,13 +148,17 @@ export default function ProductsScreen() {
     };
 
     fetchProducts();
-  }, [mode, page, currentCategory, searchText, sortOption]);
+  }, [mode, page, currentCategory, searchQuery, sortOption]);
 
-  const openProduct = (id: number) => setSelectedProductId(id);
-  const closeProduct = () => setSelectedProductId(null);
+  const openProduct = (id: number) =>
+    setSelectedProductId(id);
+
+  const closeProduct = () =>
+    setSelectedProductId(null);
 
   const handleSelectCategory = (category: Category) => {
     setSearchText('');
+    setSearchQuery('');
     setIsSearching(false);
     setPage(0);
     setProducts([]);
@@ -131,6 +167,7 @@ export default function ProductsScreen() {
 
   const handleBack = () => {
     setSearchText('');
+    setSearchQuery('');
     setIsSearching(false);
     setPage(0);
     setProducts([]);
@@ -139,6 +176,7 @@ export default function ProductsScreen() {
 
   const handleBackFromSearch = () => {
     setSearchText('');
+    setSearchQuery('');
     setIsSearching(false);
     setPage(0);
     setProducts([]);
@@ -148,161 +186,189 @@ export default function ProductsScreen() {
     const text = searchText.trim();
 
     if (!text) {
+      setSearchQuery('');
       setIsSearching(false);
       setProducts([]);
       setPage(0);
       return;
     }
 
-    setPage(0);
+    setSearchQuery(text);
     setIsSearching(true);
+    setPage(0);
   };
 
   const showProducts = !isIdle;
-  const showPagination = !isIdle && products.length > 0;
+  const showPagination =
+    !isIdle && products.length > 0;
+
   const showEmptyState =
-    showProducts && !loadingProducts && products.length === 0;
+    showProducts &&
+    !loadingProducts &&
+    products.length === 0;
 
   return (
     <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={styles.scrollWrapper}>
 
-        {/* SEARCH */}
-        <View style={styles.searchContainer}>
-          <SearchBar
-            value={searchText}
-            onChangeText={(t) => {
-              setSearchText(t);
-              setIsSearching(false);
-            }}
-            onSubmit={executeSearch}
-          />
-        </View>
-
-        {/* HEADER */}
-        {(!isRoot || isSearching) && (
-          <>
-            <AnimatedButton
-              title="← Volver"
-              onPress={isSearching ? handleBackFromSearch : handleBack}
-              style={styles.backButton}
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          scrollEventThrottle={16}
+          onScroll={(e) =>
+            setScrollY(
+              e.nativeEvent.contentOffset.y
+            )
+          }
+        >
+          <View style={styles.searchContainer}>
+            <SearchBar
+              value={searchText}
+              onChangeText={setSearchText}
+              onSubmit={executeSearch}
             />
+          </View>
 
-            {!isSearching && (
-              <>
-                <ThemedText style={styles.title}>
-                  {currentCategory?.name}
+          {(!isRoot || isSearching) && (
+            <>
+              <AnimatedButton
+                title="← Volver"
+                onPress={
+                  isSearching
+                    ? handleBackFromSearch
+                    : handleBack
+                }
+                style={styles.backButton}
+              />
+
+              {!isSearching && (
+                <>
+                  <ThemedText style={styles.title}>
+                    {currentCategory?.name}
+                  </ThemedText>
+
+                  {subcategories.length > 0 && (
+                    <CategoryGrid
+                      categories={subcategories}
+                      onPress={
+                        handleSelectCategory
+                      }
+                    />
+                  )}
+                </>
+              )}
+            </>
+          )}
+
+          {isRoot && !isSearching && (
+            <CategoryGrid
+              categories={rootCategories}
+              onPress={handleSelectCategory}
+            />
+          )}
+
+          {products.length > 0 && (
+            <View style={styles.sortContainer}>
+              <Pressable
+                onPress={() =>
+                  setSortOpen((v) => !v)
+                }
+                style={styles.dropdownHeader}
+              >
+                <ThemedText>
+                  Ordenar por...
                 </ThemedText>
+                <ThemedText>▼</ThemedText>
+              </Pressable>
 
-                {subcategories.length > 0 && (
-                  <CategoryGrid
-                    categories={subcategories}
-                    onPress={handleSelectCategory}
-                  />
-                )}
-              </>
-            )}
-          </>
-        )}
-
-        {/* ROOT */}
-        {isRoot && !isSearching && (
-          <CategoryGrid
-            categories={rootCategories}
-            onPress={handleSelectCategory}
-          />
-        )}
-
-        {/* DROPDOWN SORT */}
-        {products.length > 0 && (
-          <View style={styles.sortContainer}>
-
-            <Pressable
-              onPress={() => setSortOpen((v) => !v)}
-              style={styles.dropdownHeader}
-            >
-              <ThemedText style={styles.dropdownHeaderText}>
-                Ordenar por...
-              </ThemedText>
-              <ThemedText>▼</ThemedText>
-            </Pressable>
-
-            {sortOpen && (
-              <View style={styles.dropdown}>
-                {(Object.keys(sortLabel) as SortOption[]).map((key) => (
-                  <Pressable
-                    key={key}
-                    onPress={() => {
-                      setSortOption(key);
-                      setPage(0);
-                      setSortOpen(false);
-                    }}
-                    style={[
-                      styles.dropdownItem,
-                      sortOption === key && styles.dropdownItemActive,
-                    ]}
-                  >
-                    <ThemedText
+              {sortOpen && (
+                <View style={styles.dropdown}>
+                  {(Object.keys(
+                    sortLabel
+                  ) as SortOption[]).map((key) => (
+                    <Pressable
+                      key={key}
+                      onPress={() => {
+                        setSortOption(key);
+                        setPage(0);
+                        setSortOpen(false);
+                      }}
                       style={[
-                        styles.dropdownText,
-                        sortOption === key && styles.dropdownTextActive,
+                        styles.dropdownItem,
+                        sortOption === key &&
+                          styles.dropdownItemActive,
                       ]}
                     >
-                      {sortLabel[key]}
-                    </ThemedText>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
+                      <ThemedText
+                        style={[
+                          styles.dropdownText,
+                          sortOption === key &&
+                            styles.dropdownTextActive,
+                        ]}
+                      >
+                        {sortLabel[key]}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
+          )}
 
-        {/* PRODUCTS */}
-        {showProducts &&
-          (loadingProducts ? (
-            <ThemedText>Cargando productos...</ThemedText>
-          ) : (
-            <ProductGrid
-              products={products}
-              onSelectProduct={openProduct}
-            />
-          ))}
-
-        {/* EMPTY */}
-        {showEmptyState && (
-          <ThemedText style={styles.empty}>
-            No se encontraron productos
-          </ThemedText>
-        )}
-
-        {/* PAGINATION */}
-        {showPagination && (
-          <View style={styles.pagination}>
-            {page > 0 ? (
-              <AnimatedButton
-                title="← Anterior"
-                onPress={() => setPage(page - 1)}
-              />
+          {showProducts &&
+            (loadingProducts ? (
+              <ThemedText>
+                Cargando productos...
+              </ThemedText>
             ) : (
-              <View style={{ width: 100 }} />
-            )}
-
-            <ThemedText>Página {page + 1}</ThemedText>
-
-            {products.length === PAGE_SIZE ? (
-              <AnimatedButton
-                title="Siguiente →"
-                onPress={() => setPage(page + 1)}
+              <ProductGrid
+                products={products}
+                onSelectProduct={openProduct}
               />
-            ) : (
-              <View style={{ width: 100 }} />
-            )}
-          </View>
-        )}
+            ))}
 
-      </ScrollView>
+          {showEmptyState && (
+            <ThemedText style={styles.empty}>
+              No se encontraron productos
+            </ThemedText>
+          )}
 
-      {/* MODAL */}
+          {showPagination && (
+            <View style={styles.pagination}>
+              {page > 0 ? (
+                <AnimatedButton
+                  title="← Anterior"
+                  onPress={() =>
+                    setPage(page - 1)
+                  }
+                />
+              ) : (
+                <View style={{ width: 100 }} />
+              )}
+
+              <ThemedText>
+                Página {page + 1}
+              </ThemedText>
+
+              {products.length === PAGE_SIZE ? (
+                <AnimatedButton
+                  title="Siguiente →"
+                  onPress={() =>
+                    setPage(page + 1)
+                  }
+                />
+              ) : (
+                <View style={{ width: 100 }} />
+              )}
+            </View>
+          )}
+        </ScrollView>
+
+        <ScrollFadeOverlay
+          scrollY={scrollY}
+          color={theme.background}
+        />
+      </View>
+
       <CustomModal
         visible={selectedProductId !== null}
         onClose={closeProduct}
@@ -320,9 +386,19 @@ export default function ProductsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24 },
-  scroll: { paddingBottom: 40 },
 
-  searchContainer: { marginBottom: 20 },
+  scrollWrapper: {
+    flex: 1,
+    position: 'relative',
+  },
+
+  scroll: {
+    paddingBottom: 40,
+  },
+
+  searchContainer: {
+    marginBottom: 20,
+  },
 
   backButton: {
     alignSelf: 'flex-start',
@@ -353,12 +429,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
 
-  sortLabel: {
-    marginBottom: 6,
-    fontSize: 14,
-    opacity: 0.7,
-  },
-
   dropdownHeader: {
     padding: 10,
     borderWidth: 1,
@@ -366,10 +436,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-  },
-
-  dropdownHeaderText: {
-    fontSize: 13,
   },
 
   dropdown: {
