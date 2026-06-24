@@ -8,7 +8,6 @@ import { ProductDetail } from '@/components/product-detail';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-
 import { CustomModal } from '@/components/ui/custom-modal';
 
 import {
@@ -42,21 +41,50 @@ export default function ProductsScreen() {
     : [];
 
   // =========================
-  // FETCH CATEGORY / ALL
+  // IDLE
+  // =========================
+  const isIdle = isRoot && !isSearching && categoryStack.length === 0;
+
+  const mode: 'idle' | 'category' | 'search' =
+    isSearching
+      ? 'search'
+      : isIdle
+        ? 'idle'
+        : 'category';
+
+  // =========================
+  // FETCH ÚNICO
   // =========================
   useEffect(() => {
-    if (isSearching) return;
+    if (mode === 'idle') return;
 
     const fetchProducts = async () => {
       setLoadingProducts(true);
 
       try {
-        const baseUrl = currentCategory
-          ? buildProductUrl(currentCategory.id)
-          : buildAllProductsUrl(); // 👈 FIX REAL "TODOS"
+        let url: URL;
 
-        const url = new URL(baseUrl);
+        if (mode === 'search') {
+          const text = searchText.trim();
+          if (!text) return;
+
+          url = new URL('https://www.lajustaunlp.com.ar/api/product');
+
+          url.searchParams.set('filter', `"${text}"`);
+          url.searchParams.set(
+            'properties',
+            JSON.stringify([{ key: 'deletedAt', value: 'null' }])
+          );
+        } else {
+          const baseUrl = currentCategory
+            ? buildProductUrl(currentCategory.id)
+            : buildAllProductsUrl();
+
+          url = new URL(baseUrl);
+        }
+
         url.searchParams.set('range', `${page},${PAGE_SIZE}`);
+        url.searchParams.set('sort', 'id,ASC');
 
         const res = await fetch(url.toString());
         const json = await res.json();
@@ -70,67 +98,58 @@ export default function ProductsScreen() {
     };
 
     fetchProducts();
-  }, [currentCategory, page, isSearching]);
+  }, [mode, page, currentCategory, searchText]);
 
   // =========================
-  // SEARCH (FIX FILTER)
+  // HANDLERS
   // =========================
-  const executeSearch = async () => {
-    const text = searchText.trim();
-
-    if (!text) {
-      setIsSearching(false);
-      return;
-    }
-
-    try {
-      setLoadingProducts(true);
-      setIsSearching(true);
-
-      const url = new URL('https://www.lajustaunlp.com.ar/api/product');
-
-      url.searchParams.set('filter', `"${text}"`);
-
-      url.searchParams.set(
-        'properties',
-        JSON.stringify([
-          { key: 'deletedAt', value: 'null' },
-        ])
-      );
-
-      url.searchParams.set('range', `0,${PAGE_SIZE}`);
-      url.searchParams.set('sort', 'id,ASC');
-
-      const res = await fetch(url.toString());
-      const json = await res.json();
-
-      setProducts(json.page ?? []);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
-
   const openProduct = (id: number) => setSelectedProductId(id);
   const closeProduct = () => setSelectedProductId(null);
 
   const handleSelectCategory = (category: Category) => {
     setSearchText('');
     setIsSearching(false);
-    setCategoryStack((prev) => [...prev, category]);
     setPage(0);
+    setProducts([]);
+    setCategoryStack((prev) => [...prev, category]);
   };
 
   const handleBack = () => {
     setSearchText('');
     setIsSearching(false);
-    setCategoryStack((prev) => prev.slice(0, -1));
     setPage(0);
+    setProducts([]);
+    setCategoryStack((prev) => prev.slice(0, -1));
   };
 
-  const showProducts =
-    (isSearching || !isRoot || categoryStack.length > 0);
+  const handleBackFromSearch = () => {
+    setSearchText('');
+    setIsSearching(false);
+    setPage(0);
+    setProducts([]);
+  };
+
+  const executeSearch = () => {
+    const text = searchText.trim();
+
+    if (!text) {
+      setIsSearching(false);
+      setProducts([]);
+      setPage(0);
+      return;
+    }
+
+    setPage(0);
+    setIsSearching(true);
+  };
+
+  // =========================
+  // UI LOGIC
+  // =========================
+  const showProducts = !isIdle;
+
+  const showPagination =
+    !isIdle && products.length > 0;
 
   const showEmptyState =
     showProducts && !loadingProducts && products.length === 0;
@@ -151,6 +170,32 @@ export default function ProductsScreen() {
           />
         </View>
 
+        {/* HEADER + BACK */}
+        {(!isRoot || isSearching) && (
+          <>
+            <AnimatedButton
+              title="← Volver"
+              onPress={isSearching ? handleBackFromSearch : handleBack}
+              style={styles.backButton}
+            />
+
+            {!isSearching && (
+              <>
+                <ThemedText style={styles.title}>
+                  {currentCategory?.name}
+                </ThemedText>
+
+                {subcategories.length > 0 && (
+                  <CategoryGrid
+                    categories={subcategories}
+                    onPress={handleSelectCategory}
+                  />
+                )}
+              </>
+            )}
+          </>
+        )}
+
         {/* ROOT CATEGORIES */}
         {isRoot && !isSearching && (
           <CategoryGrid
@@ -159,29 +204,7 @@ export default function ProductsScreen() {
           />
         )}
 
-        {/* CATEGORY HEADER */}
-        {!isRoot && !isSearching && (
-          <>
-            <AnimatedButton
-              title="← Volver"
-              onPress={handleBack}
-              style={styles.backButton}
-            />
-
-            <ThemedText style={styles.title}>
-              {currentCategory?.name}
-            </ThemedText>
-
-            {subcategories.length > 0 && (
-              <CategoryGrid
-                categories={subcategories}
-                onPress={handleSelectCategory}
-              />
-            )}
-          </>
-        )}
-
-        {/* PRODUCTS (FIX: NO ROOT EMPTY GHOST GRID) */}
+        {/* PRODUCTS */}
         {showProducts && (
           loadingProducts ? (
             <ThemedText>Cargando productos...</ThemedText>
@@ -193,14 +216,15 @@ export default function ProductsScreen() {
           )
         )}
 
+        {/* EMPTY */}
         {showEmptyState && (
           <ThemedText style={styles.empty}>
             No se encontraron productos
           </ThemedText>
         )}
 
-        {/* PAGINATION SOLO CATEGORÍA */}
-        {!isSearching && !isRoot && (
+        {/* PAGINATION */}
+        {showPagination && (
           <View style={styles.pagination}>
             {page > 0 ? (
               <AnimatedButton
