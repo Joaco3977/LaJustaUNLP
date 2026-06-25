@@ -213,6 +213,7 @@ export default function ProductsScreen() {
 
         <ScrollView
           contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={(e) =>
             setScrollY(
