@@ -4,6 +4,7 @@ import { Colors } from '@/constants/theme';
 import { useEffect, useState } from 'react';
 import {
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   useColorScheme,
@@ -36,6 +37,7 @@ type Product = {
 
 export function ProductDetail({ productId, onClose }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -49,6 +51,8 @@ export function ProductDetail({ productId, onClose }: Props) {
 
   if (!product) return null;
 
+  const stock = product.stock ?? 0;
+
   const image =
     product.images?.[0]?.value
       ? { uri: product.images[0].value }
@@ -58,6 +62,20 @@ export function ProductDetail({ productId, onClose }: Props) {
     product.unit?.code && product.unitQuantity
       ? `${product.unitQuantity} ${product.unit.code}`
       : null;
+
+  const increase = () => {
+    setQuantity((q) => Math.min(q + 1, stock));
+  };
+
+  const decrease = () => {
+    setQuantity((q) => Math.max(q - 1, 1));
+  };
+
+  const handleBuy = () => {
+    console.log(
+      `intentando comprar producto con ID: ${product.id}, cantidad: ${quantity}`
+    );
+  };
 
   const Section = ({
     title,
@@ -89,7 +107,7 @@ export function ProductDetail({ productId, onClose }: Props) {
           ${product.price}
         </ThemedText>
 
-        {/* DESCRIPCIÓN */}
+        {/* INFO */}
         {!!product.description && (
           <Section title="Descripción">
             <ThemedText style={[styles.value, { color: theme.subtext }]}>
@@ -98,7 +116,6 @@ export function ProductDetail({ productId, onClose }: Props) {
           </Section>
         )}
 
-        {/* PRODUCTOR */}
         {!!product.producer?.name && (
           <Section title="Productor">
             <ThemedText style={[styles.value, { color: theme.subtext }]}>
@@ -107,7 +124,6 @@ export function ProductDetail({ productId, onClose }: Props) {
           </Section>
         )}
 
-        {/* CATEGORÍAS */}
         {!!product.categories?.length && (
           <Section title="Categorías">
             {product.categories.map((c) => (
@@ -121,7 +137,6 @@ export function ProductDetail({ productId, onClose }: Props) {
           </Section>
         )}
 
-        {/* MARCA */}
         {!!product.brand && (
           <Section title="Marca">
             <ThemedText style={[styles.value, { color: theme.subtext }]}>
@@ -130,7 +145,6 @@ export function ProductDetail({ productId, onClose }: Props) {
           </Section>
         )}
 
-        {/* UNIDAD */}
         {!!unitInfo && (
           <Section title="Unidad">
             <ThemedText style={[styles.value, { color: theme.subtext }]}>
@@ -142,12 +156,43 @@ export function ProductDetail({ productId, onClose }: Props) {
           </Section>
         )}
 
-        {/* STOCK */}
         <Section title="Stock disponible">
           <ThemedText style={[styles.value, { color: theme.subtext }]}>
-            {product.stock ?? 0} unidades
+            {stock} unidades
           </ThemedText>
         </Section>
+
+        {/* BLOQUE COMPRA SEPARADO */}
+        <View style={styles.buyContainer}>
+          {stock === 0 ? (
+            <ThemedText style={{ color: 'red', fontWeight: '600' }}>
+              Sin stock disponible
+            </ThemedText>
+          ) : (
+            <>
+              <View style={styles.quantityRow}>
+                <Pressable style={styles.qtyButton} onPress={decrease}>
+                  <ThemedText style={styles.qtyButtonText}>←</ThemedText>
+                </Pressable>
+
+                <ThemedText style={styles.quantity}>
+                  {quantity}
+                </ThemedText>
+
+                <Pressable style={styles.qtyButton} onPress={increase}>
+                  <ThemedText style={styles.qtyButtonText}>→</ThemedText>
+                </Pressable>
+              </View>
+
+              <Pressable style={styles.buyButton} onPress={handleBuy}>
+                <ThemedText style={styles.buyButtonText}>
+                  COMPRAR
+                </ThemedText>
+              </Pressable>
+            </>
+          )}
+        </View>
+
       </ScrollView>
     </View>
   );
@@ -197,5 +242,55 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 14,
     lineHeight: 20,
+  },
+
+  // UI PARA COMPRA
+  buyContainer: {
+    marginTop: 18,
+    paddingTop: 18,
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    alignItems: 'center',
+    gap: 12,
+  },
+
+  quantityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+
+  qtyButton: {
+    backgroundColor: '#22c55e',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+
+  qtyButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
+  quantity: {
+    fontSize: 18,
+    fontWeight: '700',
+    minWidth: 30,
+    textAlign: 'center',
+  },
+
+  buyButton: {
+    backgroundColor: '#16a34a',
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+
+  buyButtonText: {
+    color: 'white',
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

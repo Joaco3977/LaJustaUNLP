@@ -1,7 +1,7 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 type Props = {
   value: string;
@@ -15,6 +15,7 @@ export function SearchBar({ value, onChangeText, onSubmit }: Props) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.card }]}>
+      
       <IconSymbol name="magnifyingglass" size={20} color={colors.text} />
 
       <TextInput
@@ -26,6 +27,11 @@ export function SearchBar({ value, onChangeText, onSubmit }: Props) {
         returnKeyType="search"
         onSubmitEditing={onSubmit}
       />
+
+      <Pressable onPress={onSubmit} style={styles.button}>
+        <IconSymbol name="arrow.right" size={18} color={colors.text} />
+      </Pressable>
+
     </View>
   );
 }
@@ -39,8 +45,14 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
   },
+
   input: {
     flex: 1,
     fontSize: 16,
+  },
+
+  button: {
+    padding: 6,
+    borderRadius: 8,
   },
 });
