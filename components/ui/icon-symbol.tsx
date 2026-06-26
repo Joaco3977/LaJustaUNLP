@@ -27,6 +27,7 @@ const MAPPING = {
   'shippingbox.fill': 'inventory', // Para productos, un icono de caja de envío.
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'arrow.right': 'arrow-forward', // Flecha del botón de búsqueda (SearchBar).
 } as IconMapping;
 
 /**
