@@ -78,28 +78,6 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={[styles.container, { backgroundColor: theme.background }]}>
-      
-      {banner && (
-        <View style={styles.bannerContainer}>
-          {banner.title && (
-            <ThemedText style={styles.bannerTitle}>
-              {banner.title}
-            </ThemedText>
-          )}
-
-          {banner.subtitle && (
-            <ThemedText style={styles.bannerSubtitle}>
-              {banner.subtitle}
-            </ThemedText>
-          )}
-        </View>
-      )}
-
-      <View style={[styles.separator, { backgroundColor: theme.icon }]} />
-
-      <ThemedText style={styles.title}>
-        Destacados de la semana!
-      </ThemedText>
 
       <View style={styles.scrollWrapper}>
 
@@ -111,6 +89,29 @@ export default function HomeScreen() {
             setScrollY(event.nativeEvent.contentOffset.y);
           }}
         >
+
+          {banner && (
+          <View style={styles.bannerContainer}>
+            {banner.title && (
+              <ThemedText style={styles.bannerTitle}>
+                {banner.title}
+              </ThemedText>
+            )}
+
+            {banner.subtitle && (
+              <ThemedText style={styles.bannerSubtitle}>
+                {banner.subtitle}
+              </ThemedText>
+            )}
+          </View>
+        )}
+
+        <View style={[styles.separator, { backgroundColor: theme.icon }]} />
+
+        <ThemedText style={styles.title}>
+          Destacados de la semana!
+        </ThemedText>
+
           {loading ? (
             <ThemedText>Cargando promociones...</ThemedText>
           ) : products.length > 0 ? (
@@ -165,6 +166,7 @@ const styles = StyleSheet.create({
   scrollWrapper: {
     flex: 1,
     position: 'relative',
+    overflow: 'hidden',
   },
 
   scroll: {

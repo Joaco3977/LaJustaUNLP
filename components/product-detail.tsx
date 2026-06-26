@@ -1,5 +1,7 @@
 import { AnimatedButton } from '@/components/animated-button';
 import { ThemedText } from '@/components/themed-text';
+import { ImageZoomModal } from '@/components/ui/image-zoom-modal';
+import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 import { Colors } from '@/constants/theme';
 import { useEffect, useState } from 'react';
 import {
@@ -8,7 +10,7 @@ import {
   ScrollView,
   StyleSheet,
   useColorScheme,
-  View,
+  View
 } from 'react-native';
 
 const noImage = require('@/assets/images/no-image.png');
@@ -38,6 +40,8 @@ type Product = {
 export function ProductDetail({ productId, onClose }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [imageOpen, setImageOpen] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
@@ -58,22 +62,12 @@ export function ProductDetail({ productId, onClose }: Props) {
       ? { uri: product.images[0].value }
       : noImage;
 
-  const unitInfo =
-    product.unit?.code && product.unitQuantity
-      ? `${product.unitQuantity} ${product.unit.code}`
-      : null;
-
-  const increase = () => {
-    setQuantity((q) => Math.min(q + 1, stock));
-  };
-
-  const decrease = () => {
-    setQuantity((q) => Math.max(q - 1, 1));
-  };
+  const increase = () => setQuantity((q) => Math.min(q + 1, stock));
+  const decrease = () => setQuantity((q) => Math.max(q - 1, 1));
 
   const handleBuy = () => {
     console.log(
-      `intentando comprar producto con ID: ${product.id}, cantidad: ${quantity}`
+      `intentando agregar al carrito el producto con ID: ${product.id}, cantidad: ${quantity}`
     );
   };
 
@@ -94,106 +88,119 @@ export function ProductDetail({ productId, onClose }: Props) {
 
   return (
     <View style={[styles.overlay, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <AnimatedButton
-          title="← Volver"
-          onPress={onClose}
-          style={styles.close}
+      <View style={styles.scrollWrapper}>
+
+        <ScrollView
+          contentContainerStyle={styles.container}
+          onScroll={(e) =>
+            setScrollY(e.nativeEvent.contentOffset.y)
+          }
+          scrollEventThrottle={16}
+        >
+          <AnimatedButton
+            title="← Volver"
+            onPress={onClose}
+            style={styles.close}
+          />
+
+          <Pressable
+            onPress={() => setImageOpen(true)}
+            style={[
+              styles.imageWrapper,
+              { backgroundColor: theme.background },
+            ]}
+          >
+            <Image
+              source={image}
+              style={styles.image}
+              resizeMode="contain"
+            />
+          </Pressable>
+
+          <ThemedText style={[styles.price, { color: theme.text }]}>
+            ${product.price}
+          </ThemedText>
+
+          {!!product.description && (
+            <Section title="Descripción">
+              <ThemedText style={[styles.value, { color: theme.text }]}>
+                {product.description}
+              </ThemedText>
+            </Section>
+          )}
+
+          {!!product.producer?.name && (
+            <Section title="Productor">
+              <ThemedText style={[styles.value, { color: theme.text }]}>
+                {product.producer.name}
+              </ThemedText>
+            </Section>
+          )}
+
+          {!!product.categories?.length && (
+            <Section title="Categorías">
+              {product.categories.map((c) => (
+                <ThemedText
+                  key={c.id}
+                  style={[styles.value, { color: theme.text }]}
+                >
+                  • {c.name}
+                </ThemedText>
+              ))}
+            </Section>
+          )}
+
+          <Section title="Stock disponible">
+            <ThemedText style={[styles.value, { color: theme.text }]}>
+              {stock} unidades
+            </ThemedText>
+          </Section>
+
+          <View style={styles.buyContainer}>
+            {stock === 0 ? (
+              <ThemedText style={{ color: 'red', fontWeight: '600' }}>
+                Sin stock disponible
+              </ThemedText>
+            ) : (
+              <>
+                <View style={styles.quantityRow}>
+                  <Pressable style={styles.qtyButton} onPress={decrease}>
+                    <ThemedText style={styles.qtyButtonText}>←</ThemedText>
+                  </Pressable>
+
+                  <ThemedText style={styles.quantity}>
+                    {quantity}
+                  </ThemedText>
+
+                  <Pressable style={styles.qtyButton} onPress={increase}>
+                    <ThemedText style={styles.qtyButtonText}>→</ThemedText>
+                  </Pressable>
+                </View>
+
+                <Pressable style={styles.buyButton} onPress={handleBuy}>
+                  <ThemedText style={styles.buyButtonText}>
+                    AGREGAR AL CARRITO
+                  </ThemedText>
+                </Pressable>
+              </>
+            )}
+          </View>
+        </ScrollView>
+
+        <ScrollFadeOverlay
+          scrollY={scrollY}
+          color={theme.background}
         />
 
-        <Image source={image} style={styles.image} />
+      </View>
 
-        <ThemedText style={[styles.price, { color: theme.text }]}>
-          ${product.price}
-        </ThemedText>
-
-        {/* INFO */}
-        {!!product.description && (
-          <Section title="Descripción">
-            <ThemedText style={[styles.value, { color: theme.subtext }]}>
-              {product.description}
-            </ThemedText>
-          </Section>
-        )}
-
-        {!!product.producer?.name && (
-          <Section title="Productor">
-            <ThemedText style={[styles.value, { color: theme.subtext }]}>
-              {product.producer.name}
-            </ThemedText>
-          </Section>
-        )}
-
-        {!!product.categories?.length && (
-          <Section title="Categorías">
-            {product.categories.map((c) => (
-              <ThemedText
-                key={c.id}
-                style={[styles.value, { color: theme.subtext }]}
-              >
-                • {c.name}
-              </ThemedText>
-            ))}
-          </Section>
-        )}
-
-        {!!product.brand && (
-          <Section title="Marca">
-            <ThemedText style={[styles.value, { color: theme.subtext }]}>
-              {product.brand}
-            </ThemedText>
-          </Section>
-        )}
-
-        {!!unitInfo && (
-          <Section title="Unidad">
-            <ThemedText style={[styles.value, { color: theme.subtext }]}>
-              {product.unitQuantity}
-              {product.unitDescription
-                ? ` (${product.unitDescription})`
-                : ''}
-            </ThemedText>
-          </Section>
-        )}
-
-        <Section title="Stock disponible">
-          <ThemedText style={[styles.value, { color: theme.subtext }]}>
-            {stock} unidades
-          </ThemedText>
-        </Section>
-
-        {/* BLOQUE COMPRA SEPARADO */}
-        <View style={styles.buyContainer}>
-          {stock === 0 ? (
-            <ThemedText style={{ color: 'red', fontWeight: '600' }}>
-              Sin stock disponible
-            </ThemedText>
-          ) : (
-            <>
-              <View style={styles.quantityRow}>
-                <Pressable style={styles.qtyButton} onPress={decrease}>
-                  <ThemedText style={styles.qtyButtonText}>←</ThemedText>
-                </Pressable>
-
-                <ThemedText style={styles.quantity}>
-                  {quantity}
-                </ThemedText>
-
-                <Pressable style={styles.qtyButton} onPress={increase}>
-                  <ThemedText style={styles.qtyButtonText}>→</ThemedText>
-                </Pressable>
-              </View>
-
-              <Pressable style={styles.buyButton} onPress={handleBuy}>
-                <ThemedText style={styles.buyButtonText}>
-                  COMPRAR
-                </ThemedText>
-              </Pressable>
-            </>
-          )}
-        </View>
-
-      </ScrollView>
+      {/* ZOOM MODAL */}
+      <ImageZoomModal
+        visible={imageOpen}
+        image={image}
+        onClose={() => setImageOpen(false)}
+        backgroundColor={theme.background}
+      />
     </View>
   );
 }
@@ -201,6 +208,11 @@ export function ProductDetail({ productId, onClose }: Props) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+  },
+
+  scrollWrapper: {
+    flex: 1,
+    position: 'relative',
   },
 
   container: {
@@ -214,11 +226,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
 
+  imageWrapper: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
   image: {
     width: '100%',
-    height: 250,
-    borderRadius: 14,
-    marginBottom: 12,
+    height: '100%',
   },
 
   price: {
@@ -244,7 +264,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // UI PARA COMPRA
   buyContainer: {
     marginTop: 18,
     paddingTop: 18,
