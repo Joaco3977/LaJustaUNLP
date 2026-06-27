@@ -13,10 +13,13 @@ export function useSearchBar(options?: UseSearchBarOptions) {
   const [products, setProducts] = useState<any[]>([]);
   const [page, setPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
 
   const fetchSearch = useCallback(async () => {
-    if (!searchText.trim()) {
+    const query = searchText.trim();
+
+    // Si no hay texto de búsqueda, reseteamos estado
+    if (!query) {
       setProducts([]);
       setHasMore(false);
       return;
@@ -25,18 +28,21 @@ export function useSearchBar(options?: UseSearchBarOptions) {
     setLoading(true);
 
     try {
-      const url = new URL('https://www.lajustaunlp.com.ar/api/product');
+      const url = new URL('https://lajustaunlp.com.ar/api/product');
 
+      // Texto de búsqueda (API real)
+      url.searchParams.set('filter', `"${query}"`);
+
+      // Filtro fijo
       url.searchParams.set(
         'properties',
-        JSON.stringify([
-          { key: 'deletedAt', value: 'null' },
-        ])
+        JSON.stringify([{ key: 'deletedAt', value: 'null' }])
       );
 
-      url.searchParams.set('search', searchText);
-      url.searchParams.set('page', page.toString());
-      url.searchParams.set('size', pageSize.toString());
+      // Paginación REAL: page, size
+      url.searchParams.set('range', `${page},${pageSize}`);
+
+      // Orden
       url.searchParams.set('sort', 'id,ASC');
 
       const res = await fetch(url.toString());
@@ -45,27 +51,27 @@ export function useSearchBar(options?: UseSearchBarOptions) {
       const newProducts = json.page ?? [];
 
       setProducts((prev) =>
-        page === 0 ? newProducts : [...prev, ...newProducts]
+        page === initialPage ? newProducts : [...prev, ...newProducts]
       );
 
+      // Si devuelve menos de pageSize, no hay más páginas
       setHasMore(newProducts.length === pageSize);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
-  }, [searchText, page, pageSize]);
+  }, [searchText, page, pageSize, initialPage]);
 
   useEffect(() => {
     fetchSearch();
   }, [fetchSearch]);
 
-  // handlers públicos
   const submitSearch = (text?: string) => {
     if (text !== undefined) {
       setSearchText(text);
     }
-    setPage(0);
+    setPage(initialPage);
     setProducts([]);
     setHasMore(true);
   };
@@ -91,7 +97,7 @@ export function useSearchBar(options?: UseSearchBarOptions) {
     page,
     hasMore,
 
-    // setters / actions
+    // actions
     setSearchText,
     submitSearch,
     clearSearch,
