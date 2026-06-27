@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
@@ -8,8 +8,13 @@ import { ProductDetail } from '@/components/product-detail';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CustomModal } from '@/components/ui/custom-modal';
-
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
+
+import { HomeBanner } from '@/components/home-banner';
+
+import { useHomeBanner } from '@/hooks/use-home-banner';
+import { usePromotions } from '@/hooks/use-promotions';
+
 import { Colors } from '@/constants/theme';
 
 export default function HomeScreen() {
@@ -17,103 +22,56 @@ export default function HomeScreen() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
 
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  const [banner, setBanner] = useState<any>(null);
+  const { products, loading } = usePromotions();
+  const banner = useHomeBanner();
 
   const [selectedProductId, setSelectedProductId] =
     useState<number | null>(null);
 
   const [scrollY, setScrollY] = useState(0);
 
-  const openProduct = (id: number) => setSelectedProductId(id);
-  const closeProduct = () => setSelectedProductId(null);
+  const openProduct = (id: number) =>
+    setSelectedProductId(id);
 
-  useEffect(() => {
-    const fetchPromotions = async () => {
-      setLoading(true);
-
-      try {
-        const url = new URL('https://www.lajustaunlp.com.ar/api/product');
-
-        url.searchParams.set(
-          'properties',
-          JSON.stringify([
-            { key: 'isPromotion', value: true },
-            { key: 'deletedAt', value: 'null' },
-          ])
-        );
-
-        url.searchParams.set('sort', 'id,ASC');
-
-        const res = await fetch(url.toString());
-        const json = await res.json();
-
-        setProducts(json.page ?? []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPromotions();
-  }, []);
-
-  useEffect(() => {
-    const fetchBanner = async () => {
-      try {
-        const res = await fetch('https://www.lajustaunlp.com.ar/api/banner');
-        const json = await res.json();
-
-        setBanner(json?.[0] ?? null);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-
-    fetchBanner();
-  }, []);
+  const closeProduct = () =>
+    setSelectedProductId(null);
 
   return (
-    <ThemedView style={[styles.container, { backgroundColor: theme.background }]}>
-
+    <ThemedView
+      style={[
+        styles.container,
+        { backgroundColor: theme.background },
+      ]}
+    >
       <View style={styles.scrollWrapper}>
-
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
-          onScroll={(event) => {
-            setScrollY(event.nativeEvent.contentOffset.y);
-          }}
+          onScroll={(event) =>
+            setScrollY(
+              event.nativeEvent.contentOffset.y
+            )
+          }
         >
+          {/* BANNER */}
+          <HomeBanner banner={banner} />
 
-          {banner && (
-          <View style={styles.bannerContainer}>
-            {banner.title && (
-              <ThemedText style={styles.bannerTitle}>
-                {banner.title}
-              </ThemedText>
-            )}
+          <View
+            style={[
+              styles.separator,
+              { backgroundColor: theme.icon },
+            ]}
+          />
 
-            {banner.subtitle && (
-              <ThemedText style={styles.bannerSubtitle}>
-                {banner.subtitle}
-              </ThemedText>
-            )}
-          </View>
-        )}
-
-        <View style={[styles.separator, { backgroundColor: theme.icon }]} />
-
-        <ThemedText style={styles.title}>
-          Destacados de la semana!
-        </ThemedText>
+          <ThemedText style={styles.title}>
+            Destacados de la semana!
+          </ThemedText>
 
           {loading ? (
-            <ThemedText>Cargando promociones...</ThemedText>
+            <ThemedText>
+              Cargando promociones...
+            </ThemedText>
           ) : products.length > 0 ? (
             <>
               <ProductGrid
@@ -124,7 +82,9 @@ export default function HomeScreen() {
               <View style={styles.moreContainer}>
                 <AnimatedButton
                   title="Ver más"
-                  onPress={() => router.push('/(tabs)/products')}
+                  onPress={() =>
+                    router.push('/(tabs)/products')
+                  }
                 />
               </View>
             </>
@@ -139,7 +99,6 @@ export default function HomeScreen() {
           scrollY={scrollY}
           color={theme.background}
         />
-
       </View>
 
       <CustomModal
@@ -171,21 +130,6 @@ const styles = StyleSheet.create({
 
   scroll: {
     paddingBottom: 40,
-  },
-
-  bannerContainer: {
-    marginBottom: 10,
-  },
-
-  bannerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-
-  bannerSubtitle: {
-    fontSize: 14,
-    opacity: 0.7,
   },
 
   separator: {
