@@ -3,7 +3,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  useColorScheme
+  useColorScheme,
 } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
@@ -18,7 +18,7 @@ import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 
 import {
   Category,
-  useCategories
+  useCategories,
 } from '@/hooks/use-categories';
 
 import { useProducts } from '@/hooks/use-products';
@@ -27,13 +27,6 @@ import { useSearchBar } from '@/hooks/use-search-bar';
 import { Colors } from '@/constants/theme';
 
 const PAGE_SIZE = 12;
-
-type SortOption =
-  | 'default'
-  | 'price_asc'
-  | 'price_desc'
-  | 'name_asc'
-  | 'name_desc';
 
 export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
@@ -45,55 +38,62 @@ export default function ProductsScreen() {
   const currentCategory = categoryStack.at(-1) ?? null;
   const isRoot = currentCategory === null;
 
-  const [selectedProductId, setSelectedProductId] =
-    useState<number | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
-  // SEARCH (hook)
+  const [page, setPage] = useState(0);
+
   const {
     searchText,
     products: searchProducts,
     loading: searching,
-    hasMore,
     setSearchText,
     submitSearch,
     clearSearch,
-    loadMore,
-  } = useSearchBar({ pageSize: PAGE_SIZE });
+  } = useSearchBar({
+    pageSize: PAGE_SIZE,
+    initialPage: page,
+  });
 
   const isSearching = searchText.trim().length > 0;
 
-  // PRODUCTS (hook)
-  const { products, loading } = useProducts();
+  const { products, loading, hasMore } = useProducts({
+    page,
+    size: PAGE_SIZE,
+    categoryId:
+      currentCategory && currentCategory.id !== 0
+        ? currentCategory.id
+        : null
+  });
 
-  const visibleProducts = isSearching
-    ? searchProducts
-    : products;
+  const visibleProducts = isSearching ? searchProducts : products;
 
-  // 🧭 SCROLL
   const [scrollY, setScrollY] = useState(0);
 
   const subcategories = currentCategory
     ? getChildren(currentCategory.id)
     : [];
 
-  const openProduct = (id: number) =>
-    setSelectedProductId(id);
+  const openProduct = (id: number) => setSelectedProductId(id);
 
-  const closeProduct = () =>
-    setSelectedProductId(null);
+  const closeProduct = () => setSelectedProductId(null);
 
   const handleSelectCategory = (category: Category) => {
     clearSearch();
+    setPage(0);
     setCategoryStack((prev) => [...prev, category]);
   };
 
   const handleBack = () => {
     clearSearch();
+    setPage(0);
     setCategoryStack((prev) => prev.slice(0, -1));
   };
 
-  const showProducts =
-    !isRoot || isSearching;
+  const showProducts = !isRoot || isSearching;
+
+  const goPrevPage = () => {
+    setPage((p) => Math.max(0, p - 1));
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -102,15 +102,16 @@ export default function ProductsScreen() {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
-          onScroll={(e) =>
-            setScrollY(e.nativeEvent.contentOffset.y)
-          }
+          onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
         >
           <View style={styles.searchContainer}>
             <SearchBar
               value={searchText}
               onChangeText={setSearchText}
-              onSubmit={() => submitSearch()}
+              onSubmit={() => {
+                setPage(0);
+                submitSearch();
+              }}
             />
           </View>
 
@@ -144,9 +145,7 @@ export default function ProductsScreen() {
 
           {showProducts &&
             (loading || searching ? (
-              <ThemedText>
-                Cargando productos...
-              </ThemedText>
+              <ThemedText>Cargando productos...</ThemedText>
             ) : (
               <ProductGrid
                 products={visibleProducts}
@@ -163,20 +162,31 @@ export default function ProductsScreen() {
               </ThemedText>
             )}
 
-          {isSearching && hasMore && (
-            <View style={styles.pagination}>
-              <AnimatedButton
-                title="Cargar más"
-                onPress={loadMore}
-              />
-            </View>
-          )}
+          {showProducts &&
+            !loading &&
+            !searching &&
+            visibleProducts.length > 0 && (
+              <View style={styles.pagination}>
+                <AnimatedButton
+                  title="Anterior"
+                  onPress={goPrevPage}
+                  disabled={page === 0}
+                />
+
+                <ThemedText style={styles.pageText}>
+                  Página {page + 1}
+                </ThemedText>
+
+                <AnimatedButton
+                  title="Siguiente"
+                  onPress={() => setPage((p) => p + 1)}
+                  disabled={!hasMore}
+                />
+              </View>
+            )}
         </ScrollView>
 
-        <ScrollFadeOverlay
-          scrollY={scrollY}
-          color={theme.background}
-        />
+        <ScrollFadeOverlay scrollY={scrollY} color={theme.background} />
       </View>
 
       <CustomModal
@@ -222,7 +232,14 @@ const styles = StyleSheet.create({
 
   pagination: {
     marginTop: 20,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 16,
+  },
+
+  pageText: {
+    fontSize: 14,
   },
 
   empty: {
