@@ -22,9 +22,11 @@ const ITEM_SIZE =
   MAX_COLUMNS;
 
 const CATEGORY_IMAGES: Record<number, any> = {
-  1: require('@/assets/images/categories/categorySample.png'),
-  2: require('@/assets/images/categories/categorySample.png'),
-  3: require('@/assets/images/categories/categorySample.png'),
+  1: require('@/assets/images/categories/ofertas.png'),
+  2: require('@/assets/images/categories/ProductosArtesanales.png'),
+  3: require('@/assets/images/categories/VerdurasYFrutas.png'),
+  5: require('@/assets/images/categories/HarinasYPanificados.png'),
+  16: require('@/assets/images/categories/Bebidas.png'),
 };
 
 const FALLBACK_IMAGE = require('@/assets/images/categories/categorySample.png');
