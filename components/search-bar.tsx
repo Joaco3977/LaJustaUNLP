@@ -7,9 +7,15 @@ type Props = {
   value: string;
   onChangeText: (text: string) => void;
   onSubmit?: () => void;
+  placeholder?: string;
 };
 
-export function SearchBar({ value, onChangeText, onSubmit }: Props) {
+export function SearchBar({
+  value,
+  onChangeText,
+  onSubmit,
+  placeholder = 'Buscar productos...',
+}: Props) {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme ?? 'light'];
 
@@ -21,7 +27,7 @@ export function SearchBar({ value, onChangeText, onSubmit }: Props) {
       <TextInput
         value={value}
         onChangeText={onChangeText}
-        placeholder="Buscar productos..."
+        placeholder={placeholder}
         placeholderTextColor={colors.text + '99'}
         style={[styles.input, { color: colors.text }]}
         returnKeyType="search"

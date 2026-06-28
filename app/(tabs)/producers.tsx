@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { ProducerCard } from '@/components/producer-card';
+import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useProducers } from '@/hooks/use-producers';
@@ -11,19 +12,60 @@ const PAGE_SIZE = 10;
 
 export default function ProducersScreen() {
   const [page, setPage] = useState(0);
-  const { producers, total, loading, error, refetch } = useProducers(page, PAGE_SIZE);
+
+  // searchText = lo que se escribe; searchQuery = lo que realmente se busca (al enviar).
+  const [searchText, setSearchText] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const { producers, total, loading, error, refetch, isSearch } = useProducers(
+    page,
+    PAGE_SIZE,
+    searchQuery
+  );
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const hasPrev = page > 0;
   const hasNext = page < totalPages - 1;
 
+  // Referencia al ScrollView para poder moverlo por código.
+  const scrollRef = useRef<ScrollView>(null);
+
+  // Cada vez que cambia la página, vuelve al tope.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [page]);
+
+  const executeSearch = () => {
+    setPage(0);
+    setSearchQuery(searchText.trim());
+  };
+
   return (
     <ThemedView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.scroll}>
+        {/* BUSCADOR */}
+        <View style={styles.searchContainer}>
+          <SearchBar
+            value={searchText}
+            onChangeText={(t) => {
+              setSearchText(t);
+              // Si borran todo el texto, vuelve a la lista completa.
+              if (t.trim() === '') {
+                setSearchQuery('');
+                setPage(0);
+              }
+            }}
+            onSubmit={executeSearch}
+            placeholder="Buscar por nombre o #etiqueta..."
+          />
+        </View>
+
         {/* CONTADOR */}
         {!loading && !error && total > 0 && (
           <ThemedText style={styles.count}>
-            {total} productores
+            {isSearch
+              ? `${total} resultado${total === 1 ? '' : 's'}`
+              : `${total} productores`}
           </ThemedText>
         )}
 
@@ -39,7 +81,9 @@ export default function ProducersScreen() {
           </View>
         ) : producers.length === 0 ? (
           <ThemedText style={styles.message}>
-            No hay productores para mostrar
+            {isSearch
+              ? 'No se encontraron productores'
+              : 'No hay productores para mostrar'}
           </ThemedText>
         ) : (
           producers.map((producer) => (
@@ -47,7 +91,7 @@ export default function ProducersScreen() {
           ))
         )}
 
-        {/* PAGINACIÓN */}
+        {/* PAGINACIÓN: en lista y en búsqueda (en búsqueda se corta en memoria) */}
         {!loading && !error && totalPages > 1 && (
           <View style={styles.pagination}>
             {hasPrev ? (
@@ -79,6 +123,9 @@ const styles = StyleSheet.create({
   },
   scroll: {
     paddingBottom: 40,
+  },
+  searchContainer: {
+    marginBottom: 20,
   },
   count: {
     fontSize: 14,

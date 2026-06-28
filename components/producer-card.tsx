@@ -40,10 +40,7 @@ export function ProducerCard({ producer, onPress }: Props) {
         )}
 
         {!!producer.description && (
-          <ThemedText
-            numberOfLines={4}
-            style={[styles.description, { color: theme.subtext }]}
-          >
+          <ThemedText style={[styles.description, { color: theme.subtext }]}>
             {producer.description.trim()}
           </ThemedText>
         )}
