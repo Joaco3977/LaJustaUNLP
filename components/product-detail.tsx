@@ -29,6 +29,7 @@ type Product = {
   stock?: number;
   unit?: {
     code?: string;
+    description?: string;
   };
   unitQuantity?: number;
   unitDescription?: string;
@@ -155,6 +156,16 @@ export function ProductDetail({ productId, onClose }: Props) {
               {stock} unidades
             </ThemedText>
           </Section>
+
+          {!!product.unit?.description &&
+            !!product.unitQuantity &&
+            !!product.unit?.code && (
+              <Section title={product.unit.description}>
+                <ThemedText style={[styles.value, { color: theme.text }]}>
+                  {product.unitQuantity} {product.unit.code}
+                </ThemedText>
+              </Section>
+            )}
 
           <View style={styles.buyContainer}>
             {stock === 0 ? (
