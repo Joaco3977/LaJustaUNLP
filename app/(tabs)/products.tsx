@@ -38,7 +38,8 @@ export default function ProductsScreen() {
   const currentCategory = categoryStack.at(-1) ?? null;
   const isRoot = currentCategory === null;
 
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [selectedProductId, setSelectedProductId] =
+    useState<number | null>(null);
 
   const [page, setPage] = useState(0);
 
@@ -62,10 +63,12 @@ export default function ProductsScreen() {
     categoryId:
       currentCategory && currentCategory.id !== 0
         ? currentCategory.id
-        : null
+        : null,
   });
 
-  const visibleProducts = isSearching ? searchProducts : products;
+  const visibleProducts = isSearching
+    ? searchProducts
+    : products;
 
   const [scrollY, setScrollY] = useState(0);
 
@@ -73,9 +76,11 @@ export default function ProductsScreen() {
     ? getChildren(currentCategory.id)
     : [];
 
-  const openProduct = (id: number) => setSelectedProductId(id);
+  const openProduct = (id: number) =>
+    setSelectedProductId(id);
 
-  const closeProduct = () => setSelectedProductId(null);
+  const closeProduct = () =>
+    setSelectedProductId(null);
 
   const handleSelectCategory = (category: Category) => {
     clearSearch();
@@ -95,6 +100,15 @@ export default function ProductsScreen() {
     setPage((p) => Math.max(0, p - 1));
   };
 
+  /* =======================
+     TÍTULO DE SECCIÓN
+     ======================= */
+  const showTitle = !isRoot || isSearching;
+
+  const titleText = isSearching
+    ? `Buscando: "${searchText}"`
+    : currentCategory?.name ?? '';
+
   return (
     <ThemedView style={styles.container}>
       <View style={styles.scrollWrapper}>
@@ -102,7 +116,9 @@ export default function ProductsScreen() {
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
-          onScroll={(e) => setScrollY(e.nativeEvent.contentOffset.y)}
+          onScroll={(e) =>
+            setScrollY(e.nativeEvent.contentOffset.y)
+          }
         >
           <View style={styles.searchContainer}>
             <SearchBar
@@ -130,22 +146,24 @@ export default function ProductsScreen() {
             />
           )}
 
-          {!isSearching && subcategories.length > 0 && (
-            <>
-              <ThemedText style={styles.title}>
-                {currentCategory?.name}
-              </ThemedText>
+          {showTitle && (
+            <ThemedText style={styles.title}>
+              {titleText}
+            </ThemedText>
+          )}
 
-              <CategoryGrid
-                categories={subcategories}
-                onPress={handleSelectCategory}
-              />
-            </>
+          {!isSearching && subcategories.length > 0 && (
+            <CategoryGrid
+              categories={subcategories}
+              onPress={handleSelectCategory}
+            />
           )}
 
           {showProducts &&
             (loading || searching ? (
-              <ThemedText>Cargando productos...</ThemedText>
+              <ThemedText>
+                Cargando productos...
+              </ThemedText>
             ) : (
               <ProductGrid
                 products={visibleProducts}
@@ -179,14 +197,19 @@ export default function ProductsScreen() {
 
                 <AnimatedButton
                   title="Siguiente"
-                  onPress={() => setPage((p) => p + 1)}
+                  onPress={() =>
+                    setPage((p) => p + 1)
+                  }
                   disabled={!hasMore}
                 />
               </View>
             )}
         </ScrollView>
 
-        <ScrollFadeOverlay scrollY={scrollY} color={theme.background} />
+        <ScrollFadeOverlay
+          scrollY={scrollY}
+          color={theme.background}
+        />
       </View>
 
       <CustomModal
@@ -205,7 +228,10 @@ export default function ProductsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24 },
+  container: {
+    flex: 1,
+    padding: 24,
+  },
 
   scrollWrapper: {
     flex: 1,
