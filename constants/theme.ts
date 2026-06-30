@@ -6,7 +6,6 @@
 import { Platform } from 'react-native';
 
 const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
 
 const baseTheme = {
   outOfStockRibon: '#ff0000',
@@ -21,7 +20,7 @@ const baseTheme = {
 export const Colors = {
   light: {
     ...baseTheme,
-    title: '#11181C',
+    title: '#1b5e20',
     text: '#11181C',
     subtext: '#56595c',
     background: '#fff',
@@ -32,18 +31,6 @@ export const Colors = {
     tabIconSelected: tintColorLight,
   },
   dark: {
-    ...baseTheme,
-    title: '#ECEDEE',
-    text: '#ECEDEE',
-    subtext: '#9BA1A6',
-    background: '#151718',
-    card: '#2c2c2c',  
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
-  },
-  laJusta: {
     ...baseTheme,
     title: '#1b5e20',
     text: '#11181C',

@@ -1,21 +1,25 @@
 /**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
+ * Hook para obtener colores del theme activo
+ * (definido en el layout con ThemeProvider)
  */
 
 import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@react-navigation/native';
 
 export function useThemeColor(
-  props: { light?: string; dark?: string },
-  colorName: keyof typeof Colors.light & keyof typeof Colors.dark
+  _props: { light?: string; dark?: string },
+  colorName: keyof typeof Colors.light
 ) {
-  const theme = useColorScheme() ?? 'light';
-  const colorFromProps = props[theme];
+  const theme = useTheme();
 
-  if (colorFromProps) {
-    return colorFromProps;
-  } else {
-    return Colors[theme][colorName];
-  }
+  /**
+   * React Navigation solo expone:
+   * theme.dark -> boolean
+   * entonces mapeamos eso a nuestros colores
+   */
+  const colorSet = theme.dark
+    ? Colors.dark
+    : Colors.light;
+
+  return colorSet[colorName];
 }

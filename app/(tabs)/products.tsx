@@ -3,7 +3,6 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  useColorScheme,
 } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
@@ -23,16 +22,15 @@ import {
 
 import { useProducts } from '@/hooks/use-products';
 import { useSearchBar } from '@/hooks/use-search-bar';
-
-import { Colors } from '@/constants/theme';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 const PAGE_SIZE = 12;
 
 export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  // ✅ Color proveniente del theme activo (layout)
+  const backgroundColor = useThemeColor({}, 'background');
 
   const [categoryStack, setCategoryStack] = useState<Category[]>([]);
   const currentCategory = categoryStack.at(-1) ?? null;
@@ -100,9 +98,6 @@ export default function ProductsScreen() {
     setPage((p) => Math.max(0, p - 1));
   };
 
-  /* =======================
-     TÍTULO DE SECCIÓN
-     ======================= */
   const showTitle = !isRoot || isSearching;
 
   const titleText = isSearching
@@ -208,7 +203,7 @@ export default function ProductsScreen() {
 
         <ScrollFadeOverlay
           scrollY={scrollY}
-          color={theme.background}
+          color={backgroundColor}
         />
       </View>
 

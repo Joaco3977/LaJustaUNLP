@@ -5,12 +5,13 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const router = useRouter();
+
+  const tintColor = useThemeColor({}, 'tint');
+  const textColor = useThemeColor({}, 'text');
 
   return (
     <Tabs
@@ -18,7 +19,9 @@ export default function TabLayout() {
         headerShown: true,
         headerTitleAlign: 'center',
         tabBarButton: HapticTab,
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+
+        // ✅ color activo del tab desde el theme
+        tabBarActiveTintColor: tintColor,
 
         headerLeft: () => (
           <View style={styles.leftContainer}>
@@ -30,7 +33,9 @@ export default function TabLayout() {
         ),
 
         headerTitle: ({ children }) => (
-          <ThemedText type="subtitle">{children}</ThemedText>
+          <ThemedText type="subtitle">
+            {children}
+          </ThemedText>
         ),
 
         headerRight: () => (
@@ -39,7 +44,7 @@ export default function TabLayout() {
               <IconSymbol
                 name="cart.fill"
                 size={32}
-                color={Colors[colorScheme ?? 'light'].text}
+                color={textColor}
               />
             </Pressable>
           </View>
@@ -47,11 +52,15 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index" // Debe ser "index" para que sea la pantalla predeterminada
+        name="index"
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <IconSymbol
+              size={28}
+              name="house.fill"
+              color={color}
+            />
           ),
         }}
       />
@@ -61,7 +70,11 @@ export default function TabLayout() {
         options={{
           title: 'Productos',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="shippingbox.fill" color={color} />
+            <IconSymbol
+              size={28}
+              name="shippingbox.fill"
+              color={color}
+            />
           ),
         }}
       />
@@ -71,7 +84,11 @@ export default function TabLayout() {
         options={{
           title: 'Productores',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.3.fill" color={color} />
+            <IconSymbol
+              size={28}
+              name="person.3.fill"
+              color={color}
+            />
           ),
         }}
       />
@@ -81,7 +98,11 @@ export default function TabLayout() {
         options={{
           title: 'Nosotros',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="heart.fill" color={color} />
+            <IconSymbol
+              size={28}
+              name="heart.fill"
+              color={color}
+            />
           ),
         }}
       />
@@ -91,7 +112,11 @@ export default function TabLayout() {
         options={{
           title: 'Mi Cuenta',
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.crop.circle" color={color} />
+            <IconSymbol
+              size={28}
+              name="person.crop.circle"
+              color={color}
+            />
           ),
         }}
       />
