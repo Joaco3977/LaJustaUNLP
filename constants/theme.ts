@@ -8,8 +8,20 @@ import { Platform } from 'react-native';
 const tintColorLight = '#0a7ea4';
 const tintColorDark = '#fff';
 
+const baseTheme = {
+  outOfStockRibon: '#ff0000',
+  outOfStockRibonText: '#fff',
+  brandText: '#ff7043',
+  stockText: '#ff7043',
+  unitDescriptionText: '#6d4c41',
+  priceBackgroundColor: '#ffca28',
+  unitBackgroundColor: '#88b24e',
+};
+
 export const Colors = {
   light: {
+    ...baseTheme,
+    title: '#11181C',
     text: '#11181C',
     subtext: '#56595c',
     background: '#fff',
@@ -20,6 +32,8 @@ export const Colors = {
     tabIconSelected: tintColorLight,
   },
   dark: {
+    ...baseTheme,
+    title: '#ECEDEE',
     text: '#ECEDEE',
     subtext: '#9BA1A6',
     background: '#151718',
@@ -29,6 +43,18 @@ export const Colors = {
     tabIconDefault: '#9BA1A6',
     tabIconSelected: tintColorDark,
   },
+  laJusta: {
+    ...baseTheme,
+    title: '#1b5e20',
+    text: '#11181C',
+    subtext: '#56595c',
+    background: '#fff',
+    card: '#b3b3b3',
+    tint: tintColorLight,
+    icon: '#687076',
+    tabIconDefault: '#687076',
+    tabIconSelected: tintColorLight,
+  }
 };
 
 export const Fonts = Platform.select({
