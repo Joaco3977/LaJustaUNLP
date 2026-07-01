@@ -29,7 +29,6 @@ const PAGE_SIZE = 12;
 export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
 
-  // ✅ Color proveniente del theme activo (layout)
   const backgroundColor = useThemeColor({}, 'background');
 
   const [categoryStack, setCategoryStack] = useState<Category[]>([]);
@@ -108,7 +107,10 @@ export default function ProductsScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.scrollWrapper}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingHorizontal: 24 },
+          ]}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={(e) =>
@@ -225,7 +227,7 @@ export default function ProductsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    marginTop: 12,
   },
 
   scrollWrapper: {

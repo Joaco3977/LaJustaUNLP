@@ -5,13 +5,14 @@ import { Image, Pressable, StyleSheet, View } from 'react-native';
 import { HapticTab } from '@/components/haptic-tab';
 import { ThemedText } from '@/components/themed-text';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { useThemeColor } from '@/hooks/use-theme-color';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme() ?? 'light';
   const router = useRouter();
 
-  const tintColor = useThemeColor({}, 'tint');
-  const textColor = useThemeColor({}, 'text');
+  const theme = Colors[colorScheme];
 
   return (
     <Tabs
@@ -20,8 +21,12 @@ export default function TabLayout() {
         headerTitleAlign: 'center',
         tabBarButton: HapticTab,
 
-        // ✅ color activo del tab desde el theme
-        tabBarActiveTintColor: tintColor,
+        tabBarStyle: {
+          backgroundColor: theme.tab,
+        },
+
+        tabBarActiveTintColor: theme.tabIconSelected,
+        tabBarInactiveTintColor: theme.tabIconDefault,
 
         headerLeft: () => (
           <View style={styles.leftContainer}>
@@ -33,7 +38,10 @@ export default function TabLayout() {
         ),
 
         headerTitle: ({ children }) => (
-          <ThemedText type="subtitle">
+          <ThemedText
+            type="subtitle"
+            style={{ color: theme.tabName }}
+          >
             {children}
           </ThemedText>
         ),
@@ -44,7 +52,7 @@ export default function TabLayout() {
               <IconSymbol
                 name="cart.fill"
                 size={32}
-                color={textColor}
+                color={theme.tabIconDefault}
               />
             </Pressable>
           </View>
@@ -56,11 +64,7 @@ export default function TabLayout() {
         options={{
           title: 'Inicio',
           tabBarIcon: ({ color }) => (
-            <IconSymbol
-              size={28}
-              name="house.fill"
-              color={color}
-            />
+            <IconSymbol name="house.fill" size={28} color={color} />
           ),
         }}
       />
@@ -70,11 +74,7 @@ export default function TabLayout() {
         options={{
           title: 'Productos',
           tabBarIcon: ({ color }) => (
-            <IconSymbol
-              size={28}
-              name="shippingbox.fill"
-              color={color}
-            />
+            <IconSymbol name="shippingbox.fill" size={28} color={color} />
           ),
         }}
       />
@@ -84,11 +84,7 @@ export default function TabLayout() {
         options={{
           title: 'Productores',
           tabBarIcon: ({ color }) => (
-            <IconSymbol
-              size={28}
-              name="person.3.fill"
-              color={color}
-            />
+            <IconSymbol name="person.3.fill" size={28} color={color} />
           ),
         }}
       />
@@ -98,11 +94,7 @@ export default function TabLayout() {
         options={{
           title: 'Nosotros',
           tabBarIcon: ({ color }) => (
-            <IconSymbol
-              size={28}
-              name="heart.fill"
-              color={color}
-            />
+            <IconSymbol name="heart.fill" size={28} color={color} />
           ),
         }}
       />
@@ -112,11 +104,7 @@ export default function TabLayout() {
         options={{
           title: 'Mi Cuenta',
           tabBarIcon: ({ color }) => (
-            <IconSymbol
-              size={28}
-              name="person.crop.circle"
-              color={color}
-            />
+            <IconSymbol name="person.crop.circle" size={28} color={color} />
           ),
         }}
       />

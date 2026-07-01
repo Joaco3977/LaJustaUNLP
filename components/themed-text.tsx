@@ -26,7 +26,7 @@ export type ThemedTextProps = TextProps & {
   /**
    * Variante tipográfica
    */
-  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' |  'cardTitle' | 'cardInfo' | 'unitDescriptionText' | 'link';
 };
 
 export function ThemedText({
@@ -35,7 +35,13 @@ export function ThemedText({
   type = 'default',
   ...rest
 }: ThemedTextProps) {
-  const textColor = useThemeColor({}, color);
+  const resolvedColor =
+  type === 'title'
+    ? 'title'
+    : type === 'subtitle'
+      ? 'subtext'
+      : color;
+  const textColor = useThemeColor({}, resolvedColor);
 
   return (
     <Text
@@ -62,13 +68,28 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: 'bold',
     lineHeight: 32,
   },
 
   subtitle: {
-    fontSize: 20,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  cardTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+
+  cardInfo: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+
+  unitDescriptionText: {
+    fontSize: 14,
     fontWeight: 'bold',
   },
 

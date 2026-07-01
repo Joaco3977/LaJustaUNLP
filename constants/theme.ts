@@ -1,11 +1,7 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
-
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
+const tintColorLight = '#ff7043';
+const laJustaGreen = '#1b5e20';
 
 const baseTheme = {
   outOfStockRibon: '#ff0000',
@@ -13,33 +9,43 @@ const baseTheme = {
   brandText: '#ff7043',
   stockText: '#ff7043',
   unitDescriptionText: '#6d4c41',
-  priceBackgroundColor: '#ffca28',
-  unitBackgroundColor: '#88b24e',
+  priceBackground: '#ffca28',
+  unitBackground: '#88b24e',
+  bannerBackground: '#fdd6ca',
+  buttonText: '#ffffff',
+  confirmButton: '#a5db5a',
+  cancelButton: '#ee5858',
 };
 
 export const Colors = {
   light: {
     ...baseTheme,
+    tab: '#eeeeee',
+    tabName: laJustaGreen,
     title: '#1b5e20',
     text: '#11181C',
     subtext: '#56595c',
-    background: '#fff',
-    card: '#b3b3b3',
+    background: '#ffffff',
+    card: '#ffffff',
+    detailBackground: '#dddddd',
     tint: tintColorLight,
     icon: '#687076',
-    tabIconDefault: '#687076',
+    tabIconDefault: laJustaGreen,
     tabIconSelected: tintColorLight,
   },
   dark: {
     ...baseTheme,
+    tab: '#eeeeee',
+    tabName: laJustaGreen,
     title: '#1b5e20',
     text: '#11181C',
     subtext: '#56595c',
-    background: '#fff',
-    card: '#b3b3b3',
+    background: '#ffffff',
+    card: '#ffffff',
+    detailBackground: '#dddddd',
     tint: tintColorLight,
     icon: '#687076',
-    tabIconDefault: '#687076',
+    tabIconDefault: laJustaGreen,
     tabIconSelected: tintColorLight,
   }
 };

@@ -1,6 +1,6 @@
-import { StyleSheet, View } from 'react-native';
-
 import { ThemedText } from '@/components/themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { StyleSheet, View } from 'react-native';
 
 type Banner = {
   title?: string;
@@ -12,18 +12,20 @@ type Props = {
 };
 
 export function HomeBanner({ banner }: Props) {
+  const backgroundColor = useThemeColor({}, 'bannerBackground');
+
   if (!banner) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.card, { backgroundColor }]}>
       {banner.title && (
-        <ThemedText style={styles.title}>
+        <ThemedText type="title">
           {banner.title}
         </ThemedText>
       )}
 
       {banner.subtitle && (
-        <ThemedText style={styles.subtitle}>
+        <ThemedText type="subtitle">
           {banner.subtitle}
         </ThemedText>
       )}
@@ -32,18 +34,16 @@ export function HomeBanner({ banner }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  card: {
     marginBottom: 10,
-  },
+    padding: 16,
+    borderRadius: 12,
 
-  title: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
 
-  subtitle: {
-    fontSize: 14,
-    opacity: 0.7,
+    elevation: 3, // Android
   },
 });

@@ -66,7 +66,6 @@ export function ProductCard({ product, width, onPress }: Props) {
         {
           width,
           backgroundColor: theme.card,
-          borderColor: theme.icon,
         },
       ]}
     >
@@ -93,17 +92,13 @@ export function ProductCard({ product, width, onPress }: Props) {
       />
 
       <View style={styles.content}>
-        <ThemedText
-          numberOfLines={2}
-          type="defaultSemiBold"
-          color="title"
-        >
+        <ThemedText type="cardTitle" color="title">
           {product.title}
         </ThemedText>
 
         {!!product.brand && (
           <ThemedText
-            numberOfLines={1}
+            type="cardInfo"
             color="brandText"
             style={styles.meta}
           >
@@ -113,110 +108,60 @@ export function ProductCard({ product, width, onPress }: Props) {
 
         {!!product.unitDescription && (
           <ThemedText
-            numberOfLines={1}
             color="unitDescriptionText"
             style={styles.meta}
           >
             {product.unitDescription}
           </ThemedText>
         )}
+      </View>
 
-        {!!unitInfo && (
-          <ThemedText
-            numberOfLines={1}
-            color="stockText"
-            style={styles.meta}
-          >
-            {unitInfo}
-          </ThemedText>
-        )}
-
-        <ThemedText
-          type="defaultSemiBold"
-          color="text"
-          style={styles.price}
+      <View style={styles.footer}>
+        <View
+          style={[
+            styles.footerSection,
+            { backgroundColor: theme.unitBackground || '#e0e0e0' },
+          ]}
         >
-          ${product.price}
-        </ThemedText>
+          {!!unitInfo && (
+            <ThemedText
+              numberOfLines={1}
+              color="unitDescriptionText"
+              style={styles.unitText}
+            >
+              {unitInfo}
+            </ThemedText>
+          )}
+        </View>
+
+        <View
+          style={[
+            styles.footerSection,
+            { backgroundColor: theme.priceBackground },
+          ]}
+        >
+          <ThemedText
+            type="cardInfo"
+            color="text"
+            style={styles.price}
+          >
+            ${product.price}
+          </ThemedText>
+        </View>
       </View>
     </Pressable>
   );
 }
 
-/* Estilo para card horizontal (imagen a la izquierda y info a la derecha)
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-
-    borderRadius: 14,
-    borderWidth: 1,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-
-    elevation: 2,
-
-    height: 120,
-  },
-
-  image: {
-    width: 110,
-    height: '100%',
-    resizeMode: 'contain',
-  },
-
-  content: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    gap: 3,
-    justifyContent: 'flex-start',
-  },
-
-  title: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  meta: {
-    fontSize: 11,
-    opacity: 0.7,
-  },
-
-  price: {
-    fontSize: 15,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-
-  outOfStockRibbon: {
-    position: 'absolute',
-    top: 10,
-    right: -35,
-    backgroundColor: 'red',
-    paddingVertical: 4,
-    paddingHorizontal: 40,
-    transform: [{ rotate: '45deg' }],
-    zIndex: 10,
-    elevation: 10,
-  },
-
-  outOfStockText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
-    textAlign: 'center',
-  },
-});
-*/
-
-// Estilo para card vertical (imagen arriba e info abajo)
 const styles = StyleSheet.create({
   card: {
     borderRadius: 14,
-    borderWidth: 1,
     overflow: 'hidden',
-    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.20,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 5,
   },
 
   image: {
@@ -226,12 +171,7 @@ const styles = StyleSheet.create({
   content: {
     padding: 10,
     gap: 2,
-  },
-
-  title: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: 'theme.title',
+    flex: 1,
   },
 
   meta: {
@@ -239,17 +179,33 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
 
+  footer: {
+    height: 36,
+    flexDirection: 'row',
+    overflow: 'hidden',
+  },
+
+  footerSection: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+
   price: {
     fontSize: 14,
     fontWeight: '700',
-    marginTop: 4,
+  },
+
+  unitText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 
   outOfStockRibbon: {
     position: 'absolute',
     top: 10,
     right: -35,
-    backgroundColor: 'theme.outOfStockRibon',
     paddingVertical: 4,
     paddingHorizontal: 40,
     transform: [{ rotate: '45deg' }],
@@ -258,7 +214,6 @@ const styles = StyleSheet.create({
   },
 
   outOfStockText: {
-    color: 'theme.outOfStockRibonText',
     fontSize: 10,
     fontWeight: 'bold',
     textAlign: 'center',

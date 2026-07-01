@@ -1,8 +1,9 @@
 import { AnimatedButton } from '@/components/animated-button';
+import { ConfirmModal } from '@/components/confirm-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ImageZoomModal } from '@/components/ui/image-zoom-modal';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
-import { Colors } from '@/constants/theme';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { useFavoritesStore } from '@/stores/favorites.store';
 
 import { useEffect, useState } from 'react';
@@ -11,7 +12,6 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
-  useColorScheme,
   View,
 } from 'react-native';
 
@@ -45,9 +45,14 @@ export function ProductDetail({ productId, onClose }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [imageOpen, setImageOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [confirmOpen, setConfirmOpen] = useState(false); // ✅ NUEVO
 
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const background = useThemeColor({}, 'background');
+  const text = useThemeColor({}, 'text');
+  const icon = useThemeColor({}, 'icon');
+  const detailBackground = useThemeColor({}, 'detailBackground');
+  const tabIconDefault = useThemeColor({}, 'tabIconDefault');
+  const white = useThemeColor({}, 'buttonText');
 
   const { isFavorite, toggleFavorite } = useFavoritesStore();
 
@@ -76,8 +81,9 @@ export function ProductDetail({ productId, onClose }: Props) {
 
   const handleBuy = () => {
     console.log(
-      `intentando agregar al carrito el producto con ID: ${product.id}, cantidad: ${quantity}`
+      `Agregar carrito ID: ${product.id}, Cantidad: ${quantity}`
     );
+    setConfirmOpen(false); // ✅ cerrar modal
   };
 
   const Section = ({
@@ -87,8 +93,13 @@ export function ProductDetail({ productId, onClose }: Props) {
     title: string;
     children: React.ReactNode;
   }) => (
-    <View style={[styles.card, { backgroundColor: theme.card }]}>
-      <ThemedText style={[styles.label, { color: theme.text }]}>
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: detailBackground },
+      ]}
+    >
+      <ThemedText style={[styles.label, { color: text }]}>
         {title}
       </ThemedText>
       {children}
@@ -96,7 +107,7 @@ export function ProductDetail({ productId, onClose }: Props) {
   );
 
   return (
-    <View style={[styles.overlay, { backgroundColor: theme.background }]}>
+    <View style={[styles.overlay, { backgroundColor: background }]}>
       <View style={styles.scrollWrapper}>
         <ScrollView
           contentContainerStyle={styles.container}
@@ -115,7 +126,7 @@ export function ProductDetail({ productId, onClose }: Props) {
             onPress={() => setImageOpen(true)}
             style={[
               styles.imageWrapper,
-              { backgroundColor: theme.background },
+              { backgroundColor: background },
             ]}
           >
             <Image
@@ -127,9 +138,7 @@ export function ProductDetail({ productId, onClose }: Props) {
 
           {/* PRECIO + FAVORITO */}
           <View style={styles.priceRow}>
-            <ThemedText
-              style={[styles.price, { color: theme.text }]}
-            >
+            <ThemedText style={[styles.price, { color: text }]}>
               ${product.price}
             </ThemedText>
 
@@ -140,11 +149,7 @@ export function ProductDetail({ productId, onClose }: Props) {
               <ThemedText
                 style={[
                   styles.heart,
-                  {
-                    color: favorite
-                      ? '#fca5a5' // rojo pastel
-                      : theme.icon,
-                  },
+                  { color: favorite ? '#fca5a5' : icon },
                 ]}
               >
                 {favorite ? '❤️' : '🤍'}
@@ -154,9 +159,7 @@ export function ProductDetail({ productId, onClose }: Props) {
 
           {!!product.description && (
             <Section title="Descripción">
-              <ThemedText
-                style={[styles.value, { color: theme.text }]}
-              >
+              <ThemedText style={[styles.value, { color: text }]}>
                 {product.description}
               </ThemedText>
             </Section>
@@ -164,9 +167,7 @@ export function ProductDetail({ productId, onClose }: Props) {
 
           {!!product.producer?.name && (
             <Section title="Productor">
-              <ThemedText
-                style={[styles.value, { color: theme.text }]}
-              >
+              <ThemedText style={[styles.value, { color: text }]}>
                 {product.producer.name}
               </ThemedText>
             </Section>
@@ -174,9 +175,7 @@ export function ProductDetail({ productId, onClose }: Props) {
 
           {!!product.brand && (
             <Section title="Marca">
-              <ThemedText
-                style={[styles.value, { color: theme.text }]}
-              >
+              <ThemedText style={[styles.value, { color: text }]}>
                 {product.brand}
               </ThemedText>
             </Section>
@@ -187,7 +186,7 @@ export function ProductDetail({ productId, onClose }: Props) {
               {product.categories.map((c) => (
                 <ThemedText
                   key={c.id}
-                  style={[styles.value, { color: theme.text }]}
+                  style={[styles.value, { color: text }]}
                 >
                   • {c.name}
                 </ThemedText>
@@ -196,9 +195,7 @@ export function ProductDetail({ productId, onClose }: Props) {
           )}
 
           <Section title="Stock disponible">
-            <ThemedText
-              style={[styles.value, { color: theme.text }]}
-            >
+            <ThemedText style={[styles.value, { color: text }]}>
               {stock} unidades
             </ThemedText>
           </Section>
@@ -208,7 +205,7 @@ export function ProductDetail({ productId, onClose }: Props) {
             !!product.unit?.code && (
               <Section title={product.unit.description}>
                 <ThemedText
-                  style={[styles.value, { color: theme.text }]}
+                  style={[styles.value, { color: text }]}
                 >
                   {product.unitQuantity} {product.unit.code}
                 </ThemedText>
@@ -217,19 +214,30 @@ export function ProductDetail({ productId, onClose }: Props) {
 
           <View style={styles.buyContainer}>
             {stock === 0 ? (
-              <ThemedText
-                style={{ color: '#ef4444', fontWeight: '600' }}
-              >
+              <ThemedText style={styles.noStock}>
                 Sin stock disponible
               </ThemedText>
             ) : (
               <>
-                <View style={styles.quantityRow}>
+                <View
+                  style={[
+                    styles.quantityRow,
+                    { backgroundColor: detailBackground },
+                  ]}
+                >
                   <Pressable
-                    style={styles.qtyButton}
+                    style={[
+                      styles.qtyButton,
+                      { backgroundColor: tabIconDefault },
+                    ]}
                     onPress={decrease}
                   >
-                    <ThemedText style={styles.qtyButtonText}>
+                    <ThemedText
+                      style={[
+                        styles.qtyButtonText,
+                        { color: white },
+                      ]}
+                    >
                       ←
                     </ThemedText>
                   </Pressable>
@@ -239,20 +247,36 @@ export function ProductDetail({ productId, onClose }: Props) {
                   </ThemedText>
 
                   <Pressable
-                    style={styles.qtyButton}
+                    style={[
+                      styles.qtyButton,
+                      { backgroundColor: tabIconDefault },
+                    ]}
                     onPress={increase}
                   >
-                    <ThemedText style={styles.qtyButtonText}>
+                    <ThemedText
+                      style={[
+                        styles.qtyButtonText,
+                        { color: white },
+                      ]}
+                    >
                       →
                     </ThemedText>
                   </Pressable>
                 </View>
 
                 <Pressable
-                  style={styles.buyButton}
-                  onPress={handleBuy}
+                  style={[
+                    styles.buyButton,
+                    { backgroundColor: tabIconDefault },
+                  ]}
+                  onPress={() => setConfirmOpen(true)} // ✅ ABRE MODAL
                 >
-                  <ThemedText style={styles.buyButtonText}>
+                  <ThemedText
+                    style={[
+                      styles.buyButtonText,
+                      { color: white },
+                    ]}
+                  >
                     AGREGAR AL CARRITO
                   </ThemedText>
                 </Pressable>
@@ -263,34 +287,35 @@ export function ProductDetail({ productId, onClose }: Props) {
 
         <ScrollFadeOverlay
           scrollY={scrollY}
-          color={theme.background}
+          color={background}
         />
       </View>
+
+      {/* ✅ CONFIRM MODAL */}
+      <ConfirmModal
+        visible={confirmOpen}
+        title="Agregar al carrito"
+        description={`¿Querés agregar ${quantity} unidad(es) de este producto?`}
+        confirmText="Confirmar"
+        cancelText="Cancelar"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={handleBuy}
+      />
 
       <ImageZoomModal
         visible={imageOpen}
         image={image}
         onClose={() => setImageOpen(false)}
-        backgroundColor={theme.background}
+        backgroundColor={background}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-  },
-
-  scrollWrapper: {
-    flex: 1,
-    position: 'relative',
-  },
-
-  container: {
-    padding: 16,
-    paddingBottom: 40,
-  },
+  overlay: { flex: 1 },
+  scrollWrapper: { flex: 1 },
+  container: { padding: 16, paddingBottom: 40 },
 
   close: {
     fontSize: 16,
@@ -308,26 +333,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  image: {
-    width: '100%',
-    height: '100%',
-  },
+  image: { width: '100%', height: '100%' },
 
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 14,
   },
 
-  price: {
-    fontSize: 26,
-    fontWeight: '800',
-  },
-
-  heart: {
-    fontSize: 26,
-  },
+  price: { fontSize: 26, fontWeight: '800' },
+  heart: { fontSize: 26 },
 
   card: {
     padding: 12,
@@ -341,16 +356,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  value: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  value: { fontSize: 14, lineHeight: 20 },
 
   buyContainer: {
     marginTop: 18,
     paddingTop: 18,
-    borderTopWidth: 1,
-    borderTopColor: '#ccc',
     alignItems: 'center',
     gap: 12,
   },
@@ -359,18 +369,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
+    padding: 12,
+    borderRadius: 14,
   },
 
   qtyButton: {
-    backgroundColor: '#22c55e',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 10,
   },
 
   qtyButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
+    fontWeight: '700',
     fontSize: 16,
   },
 
@@ -382,16 +392,18 @@ const styles = StyleSheet.create({
   },
 
   buyButton: {
-    backgroundColor: '#16a34a',
     paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginTop: 4,
+    paddingVertical: 12,
+    borderRadius: 14,
   },
 
   buyButtonText: {
-    color: 'white',
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+
+  noStock: {
+    color: '#ef4444',
+    fontWeight: '600',
   },
 });

@@ -25,16 +25,11 @@ export default function HomeScreen() {
   const { products, loading } = usePromotions();
   const banner = useHomeBanner();
 
-  const [selectedProductId, setSelectedProductId] =
-    useState<number | null>(null);
-
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [scrollY, setScrollY] = useState(0);
 
-  const openProduct = (id: number) =>
-    setSelectedProductId(id);
-
-  const closeProduct = () =>
-    setSelectedProductId(null);
+  const openProduct = (id: number) => setSelectedProductId(id);
+  const closeProduct = () => setSelectedProductId(null);
 
   return (
     <ThemedView
@@ -45,54 +40,46 @@ export default function HomeScreen() {
     >
       <View style={styles.scrollWrapper}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[
+            styles.scroll,
+            { paddingHorizontal: 24 },
+          ]}
           showsVerticalScrollIndicator={false}
           scrollEventThrottle={16}
           onScroll={(event) =>
-            setScrollY(
-              event.nativeEvent.contentOffset.y
-            )
+            setScrollY(event.nativeEvent.contentOffset.y)
           }
         >
           {/* BANNER */}
           <HomeBanner banner={banner} />
 
-          <View
-            style={[
-              styles.separator,
-              { backgroundColor: theme.icon },
-            ]}
-          />
-
-          <ThemedText style={styles.title}>
+          <ThemedText type="subtitle">
             Destacados de la semana!
           </ThemedText>
 
-          {loading ? (
-            <ThemedText>
-              Cargando promociones...
-            </ThemedText>
-          ) : products.length > 0 ? (
-            <>
-              <ProductGrid
-                products={products}
-                onSelectProduct={openProduct}
-              />
-
-              <View style={styles.moreContainer}>
-                <AnimatedButton
-                  title="Ver más"
-                  onPress={() =>
-                    router.push('/(tabs)/products')
-                  }
+          <View style={styles.promotionGrid}>
+            {loading ? (
+              <ThemedText>Cargando promociones...</ThemedText>
+            ) : products.length > 0 ? (
+              <>
+                <ProductGrid
+                  products={products}
+                  onSelectProduct={openProduct}
                 />
-              </View>
-            </>
-          ) : (
-            <ThemedText style={styles.empty}>
-              No hay productos en promoción
-            </ThemedText>
-          )}
+
+                <View style={styles.moreContainer}>
+                  <AnimatedButton
+                    title="Ver más"
+                    onPress={() => router.push('/(tabs)/products')}
+                  />
+                </View>
+              </>
+            ) : (
+              <ThemedText style={styles.empty}>
+                No hay productos en promoción
+              </ThemedText>
+            )}
+          </View>
         </ScrollView>
 
         <ScrollFadeOverlay
@@ -119,28 +106,20 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    marginTop: 12,
   },
 
   scrollWrapper: {
     flex: 1,
     position: 'relative',
-    overflow: 'hidden',
   },
 
   scroll: {
     paddingBottom: 40,
   },
 
-  separator: {
-    height: 1,
-    marginVertical: 12,
-  },
-
-  title: {
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 16,
+  promotionGrid: {
+    marginTop: 16,
   },
 
   moreContainer: {

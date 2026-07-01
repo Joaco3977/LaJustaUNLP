@@ -20,24 +20,39 @@ export function SearchBar({
   const colors = Colors[colorScheme ?? 'light'];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card }]}>
-      
-      <IconSymbol name="magnifyingglass" size={20} color={colors.text} />
-
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.tabIconDefault,
+        },
+      ]}
+    >
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.text + '99'}
-        style={[styles.input, { color: colors.text }]}
+        placeholderTextColor={colors.title + '99'}
         returnKeyType="search"
         onSubmitEditing={onSubmit}
+        style={[
+          styles.input,
+          {
+            color: colors.title,
+            backgroundColor: 'transparent',
+            textAlignVertical: 'center',
+          },
+        ]}
       />
 
       <Pressable onPress={onSubmit} style={styles.button}>
-        <IconSymbol name="arrow.right" size={18} color={colors.text} />
+        <IconSymbol
+          name="arrow.right"
+          size={18}
+          color={colors.title}
+        />
       </Pressable>
-
     </View>
   );
 }
@@ -50,6 +65,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 12,
+    borderWidth: 2,
   },
 
   input: {

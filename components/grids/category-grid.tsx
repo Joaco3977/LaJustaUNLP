@@ -12,14 +12,14 @@ import { Category } from '@/hooks/use-categories';
 const PADDING = 24;
 const COLUMN_GAP = 12;
 const ROW_GAP = 30;
-const MAX_COLUMNS = 4;
+const NUM_COLUMNS = 3;
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const AVAILABLE_WIDTH = SCREEN_WIDTH - PADDING * 2;
 
 const ITEM_SIZE =
-  (AVAILABLE_WIDTH - COLUMN_GAP * (MAX_COLUMNS - 1)) /
-  MAX_COLUMNS;
+  (AVAILABLE_WIDTH - COLUMN_GAP * (NUM_COLUMNS - 1)) /
+  NUM_COLUMNS;
 
 const CATEGORY_IMAGES: Record<number, any> = {
   1: require('@/assets/images/categories/ofertas.png'),
@@ -82,7 +82,7 @@ export function CategoryGrid({ categories, onPress }: Props) {
     <View style={styles.grid}>
       {categories.map((item, index) => {
         const isLastColumn =
-          (index + 1) % MAX_COLUMNS === 0;
+          (index + 1) % NUM_COLUMNS === 0;
 
         const imageSource =
           CATEGORY_IMAGES[item.id] ?? FALLBACK_IMAGE;
@@ -102,10 +102,7 @@ export function CategoryGrid({ categories, onPress }: Props) {
           >
             <Image source={imageSource} style={styles.image} />
 
-            <ThemedText
-              style={styles.cardText}
-              numberOfLines={2}
-            >
+            <ThemedText style={styles.cardText}>
               {item.name}
             </ThemedText>
           </Pressable>
@@ -120,19 +117,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
+
   card: {
     alignItems: 'center',
     minHeight: ITEM_SIZE + 40,
+
+    borderRadius: 14,
+
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+
+    elevation: 5,
   },
+
   image: {
     width: ITEM_SIZE,
     height: ITEM_SIZE,
     borderRadius: 14,
   },
+
   cardText: {
     marginTop: 6,
     fontSize: 12,
     textAlign: 'center',
     width: '100%',
+    fontWeight: 'bold',
   },
 });

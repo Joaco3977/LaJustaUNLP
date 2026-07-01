@@ -4,12 +4,12 @@ import {
   ActivityIndicator,
   Dimensions,
   FlatList,
-  Modal,
   Pressable,
   StyleSheet,
-  View,
+  View
 } from 'react-native';
 
+import { ConfirmModal } from '@/components/confirm-modal';
 import { Product, ProductCard } from '@/components/product-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -31,7 +31,6 @@ export default function FavoritesScreen() {
   const backgroundColor = useThemeColor({}, 'background');
   const subtextColor = useThemeColor({}, 'subtext');
   const tintColor = useThemeColor({}, 'tint');
-  const iconColor = useThemeColor({}, 'icon');
 
   useEffect(() => {
     loadFavorites();
@@ -65,13 +64,6 @@ export default function FavoritesScreen() {
 
     loadProducts();
   }, [favorites]);
-
-  const confirmRemove = () => {
-    if (selectedProductId !== null) {
-      removeFavorite(selectedProductId);
-      setSelectedProductId(null);
-    }
-  };
 
   const ITEM_WIDTH =
     (Dimensions.get('window').width - PADDING * 2 - GAP) / 2;
@@ -133,48 +125,20 @@ export default function FavoritesScreen() {
         )}
       </ThemedView>
 
-      {/* MODAL CONFIRMACIÓN */}
-      <Modal
+      <ConfirmModal
         visible={selectedProductId !== null}
-        transparent
-        animationType="fade"
-      >
-        <View style={styles.modalOverlay}>
-          <ThemedView
-            style={[
-              styles.modal,
-              { backgroundColor },
-            ]}
-          >
-            <ThemedText type="subtitle">
-              ¿Eliminar de favoritos?
-            </ThemedText>
-
-            <ThemedText style={{ color: subtextColor }}>
-              Este producto dejará de aparecer en tu lista
-              de favoritos.
-            </ThemedText>
-
-            <View style={styles.modalActions}>
-              <Pressable
-                onPress={() =>
-                  setSelectedProductId(null)
-                }
-              >
-                <ThemedText style={{ color: iconColor }}>
-                  Cancelar
-                </ThemedText>
-              </Pressable>
-
-              <Pressable onPress={confirmRemove}>
-                <ThemedText style={{ color: tintColor }}>
-                  Eliminar
-                </ThemedText>
-              </Pressable>
-            </View>
-          </ThemedView>
-        </View>
-      </Modal>
+        title="¿Eliminar de favoritos?"
+        description="Este producto dejará de aparecer en tu lista de favoritos."
+        cancelText="Cancelar"
+        confirmText="Eliminar"
+        onCancel={() => setSelectedProductId(null)}
+        onConfirm={() => {
+          if (selectedProductId !== null) {
+            removeFavorite(selectedProductId);
+            setSelectedProductId(null);
+          }
+        }}
+      />
     </>
   );
 }
