@@ -62,7 +62,7 @@ export default function ProducersScreen() {
 
         {/* CONTADOR */}
         {!loading && !error && total > 0 && (
-          <ThemedText style={styles.count}>
+          <ThemedText color="subtext" style={styles.count}>
             {isSearch
               ? `${total} resultado${total === 1 ? '' : 's'}`
               : `${total} productores`}
@@ -71,16 +71,18 @@ export default function ProducersScreen() {
 
         {/* ESTADOS */}
         {loading ? (
-          <ThemedText style={styles.message}>Cargando productores...</ThemedText>
+          <ThemedText color="subtext" style={styles.message}>
+            Cargando productores...
+          </ThemedText>
         ) : error ? (
           <View style={styles.center}>
-            <ThemedText style={styles.message}>
+            <ThemedText color="subtext" style={styles.message}>
               No se pudieron cargar los productores.
             </ThemedText>
             <AnimatedButton title="Reintentar" onPress={refetch} />
           </View>
         ) : producers.length === 0 ? (
-          <ThemedText style={styles.message}>
+          <ThemedText color="subtext" style={styles.message}>
             {isSearch
               ? 'No se encontraron productores'
               : 'No hay productores para mostrar'}
@@ -94,21 +96,21 @@ export default function ProducersScreen() {
         {/* PAGINACIÓN: en lista y en búsqueda (en búsqueda se corta en memoria) */}
         {!loading && !error && totalPages > 1 && (
           <View style={styles.pagination}>
-            {hasPrev ? (
-              <AnimatedButton title="← Anterior" onPress={() => setPage(page - 1)} />
-            ) : (
-              <View style={styles.spacer} />
-            )}
+            <AnimatedButton
+              title="Anterior"
+              onPress={() => setPage(page - 1)}
+              disabled={!hasPrev}
+            />
 
-            <ThemedText>
+            <ThemedText color="subtext" style={styles.pageText}>
               Página {page + 1} de {totalPages}
             </ThemedText>
 
-            {hasNext ? (
-              <AnimatedButton title="Siguiente →" onPress={() => setPage(page + 1)} />
-            ) : (
-              <View style={styles.spacer} />
-            )}
+            <AnimatedButton
+              title="Siguiente"
+              onPress={() => setPage(page + 1)}
+              disabled={!hasNext}
+            />
           </View>
         )}
       </ScrollView>
@@ -119,9 +121,10 @@ export default function ProducersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 24,
+    marginTop: 12,
   },
   scroll: {
+    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   searchContainer: {
@@ -129,13 +132,14 @@ const styles = StyleSheet.create({
   },
   count: {
     fontSize: 14,
-    opacity: 0.7,
     marginBottom: 16,
   },
   message: {
     textAlign: 'center',
     marginTop: 20,
-    opacity: 0.8,
+  },
+  pageText: {
+    fontSize: 14,
   },
   center: {
     alignItems: 'center',
@@ -144,11 +148,9 @@ const styles = StyleSheet.create({
   },
   pagination: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 16,
     marginTop: 20,
-  },
-  spacer: {
-    width: 100,
   },
 });

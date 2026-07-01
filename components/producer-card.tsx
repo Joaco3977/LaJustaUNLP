@@ -26,7 +26,10 @@ export function ProducerCard({ producer, onPress }: Props) {
   return (
     <Pressable
       onPress={onPress}
-      style={[styles.card, { backgroundColor: theme.card }]}
+      style={[
+        styles.card,
+        { backgroundColor: theme.card, borderColor: theme.detailBackground },
+      ]}
     >
       <ImageCarousel images={imageUrls} height={180} />
 
@@ -65,6 +68,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 16,
     elevation: 2,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   content: {
     padding: 14,

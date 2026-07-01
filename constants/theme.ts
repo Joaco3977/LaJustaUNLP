@@ -1,7 +1,9 @@
 import { Platform } from 'react-native';
 
 const tintColorLight = '#ff7043';
+const tintColorDark = '#ff8a65';
 const laJustaGreen = '#1b5e20';
+const laJustaGreenLight = '#81c784';
 
 const baseTheme = {
   outOfStockRibon: '#ff0000',
@@ -35,18 +37,18 @@ export const Colors = {
   },
   dark: {
     ...baseTheme,
-    tab: '#eeeeee',
-    tabName: laJustaGreen,
-    title: '#1b5e20',
-    text: '#11181C',
-    subtext: '#56595c',
-    background: '#ffffff',
-    card: '#ffffff',
-    detailBackground: '#dddddd',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: laJustaGreen,
-    tabIconSelected: tintColorLight,
+    tab: '#1c1c1e',              // barra de tabs / header: superficie oscura
+    tabName: laJustaGreenLight,  // título del header en verde claro (marca) legible
+    title: laJustaGreenLight,    // títulos y acentos verdes visibles sobre oscuro
+    text: '#ececee',             // texto principal claro
+    subtext: '#9ba1a6',          // texto secundario atenuado
+    background: '#121212',       // fondo general de pantalla
+    card: '#1e1e1e',             // tarjetas / inputs (un tono por encima del fondo)
+    detailBackground: '#2a2a2a', // bordes sutiles y fondos de detalle
+    tint: tintColorDark,         // acento naranja algo más claro para oscuro
+    icon: '#9ba1a6',
+    tabIconDefault: laJustaGreenLight, // íconos/bordes verdes legibles
+    tabIconSelected: tintColorDark,    // tab activa en naranja
   }
 };
 
