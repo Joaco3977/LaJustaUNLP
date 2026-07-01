@@ -125,7 +125,7 @@ export function ProductCard({ product, width, onPress }: Props) {
           ]}
         >
           {!!unitInfo && (
-            <ThemedText
+            <ThemedText type="unitDescriptionText"
               numberOfLines={1}
               color="unitDescriptionText"
             >
@@ -141,7 +141,7 @@ export function ProductCard({ product, width, onPress }: Props) {
           ]}
         >
           <ThemedText
-            type="cardInfo"
+            type="unitDescriptionText"
             color="text"
           >
             ${product.price}

@@ -12,11 +12,12 @@ type CartState = {
 
   loadCart: () => Promise<void>;
 
-  addToCart: (productId: number) => void;
+  addToCart: (productId: number, quantity?: number) => void;
   removeFromCart: (productId: number) => void;
   increaseQuantity: (productId: number) => void;
   decreaseQuantity: (productId: number) => void;
 
+  getTotalItems: () => number;
   getItemQuantity: (productId: number) => number;
   clearCart: () => void;
 };
@@ -39,20 +40,28 @@ const cartStoreCreator: StateCreator<CartState> = (set, get) => ({
     }
   },
 
-  addToCart: (productId: number) => {
+  addToCart: (productId: number, quantity = 1) => {
     const { cart } = get();
-    const existingItem = cart.find(item => item.productId === productId);
+    const existingItem = cart.find(
+      item => item.productId === productId
+    );
 
     const updatedCart: CartItem[] = existingItem
       ? cart.map(item =>
           item.productId === productId
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + quantity,
+              }
             : item
         )
-      : [...cart, { productId, quantity: 1 }];
+      : [...cart, { productId, quantity }];
 
     set({ cart: updatedCart });
-    AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(updatedCart));
+    AsyncStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(updatedCart)
+    );
   },
 
   increaseQuantity: (productId: number) => {
@@ -86,6 +95,10 @@ const cartStoreCreator: StateCreator<CartState> = (set, get) => ({
 
     set({ cart: updatedCart });
     AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(updatedCart));
+  },
+  
+  getTotalItems: () => {
+    return get().cart.reduce((total, item) => total + item.quantity, 0);
   },
 
   getItemQuantity: (productId: number) => {

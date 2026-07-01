@@ -183,7 +183,7 @@ export default function ProductsScreen() {
             !loading &&
             !searching &&
             visibleProducts.length === 0 && (
-              <ThemedText style={styles.empty}>
+              <ThemedText type="subtitle" style={styles.empty}>
                 No se encontraron productos
               </ThemedText>
             )}
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
 
   divider: {
-    height: 1,
+    height: 2,
     width: '100%',
     marginVertical: 16,
     opacity: 0.6,

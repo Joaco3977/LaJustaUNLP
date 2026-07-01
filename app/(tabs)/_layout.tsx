@@ -8,9 +8,15 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+import { useCartStore } from '@/stores/cart.store';
+
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? 'light';
   const router = useRouter();
+
+  const totalItems = useCartStore(
+    state => state.getTotalItems()
+  );
 
   const theme = Colors[colorScheme];
 
@@ -49,11 +55,21 @@ export default function TabLayout() {
         headerRight: () => (
           <View style={styles.headerRightContainer}>
             <Pressable onPress={() => router.push('/cart')}>
-              <IconSymbol
-                name="cart.fill"
-                size={32}
-                color={theme.tabIconDefault}
-              />
+              <View style={styles.cartIconWrapper}>
+                <IconSymbol
+                  name="cart.fill"
+                  size={32}
+                  color={theme.tabIconDefault}
+                />
+
+                {totalItems > 0 && (
+                  <View style={styles.badge}>
+                    <ThemedText style={styles.badgeText}>
+                      {totalItems}
+                    </ThemedText>
+                  </View>
+                )}
+              </View>
             </Pressable>
           </View>
         ),
@@ -124,4 +140,26 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 16,
   },
+  cartIconWrapper: {
+  position: 'relative',
+},
+
+badge: {
+  position: 'absolute',
+  top: -6,
+  right: -8,
+  minWidth: 18,
+  height: 18,
+  borderRadius: 9,
+  backgroundColor: '#ff7043',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingHorizontal: 4,
+},
+
+badgeText: {
+  color: '#fff',
+  fontSize: 11,
+  fontWeight: '700',
+},
 });

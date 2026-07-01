@@ -4,6 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ImageZoomModal } from '@/components/ui/image-zoom-modal';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useCartStore } from '@/stores/cart.store';
 import { useFavoritesStore } from '@/stores/favorites.store';
 
 import { useEffect, useState } from 'react';
@@ -45,8 +46,8 @@ export function ProductDetail({ productId, onClose }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [imageOpen, setImageOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const [confirmOpen, setConfirmOpen] = useState(false); // ✅ NUEVO
-
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { addToCart } = useCartStore();
   const background = useThemeColor({}, 'background');
   const text = useThemeColor({}, 'text');
   const icon = useThemeColor({}, 'icon');
@@ -80,10 +81,10 @@ export function ProductDetail({ productId, onClose }: Props) {
     setQuantity((q) => Math.max(q - 1, 1));
 
   const handleBuy = () => {
-    console.log(
-      `Agregar carrito ID: ${product.id}, Cantidad: ${quantity}`
-    );
-    setConfirmOpen(false); // ✅ cerrar modal
+    if (!product) return;
+
+    addToCart(product.id, quantity);
+    setConfirmOpen(false);
   };
 
   const Section = ({
@@ -156,6 +157,14 @@ export function ProductDetail({ productId, onClose }: Props) {
               </ThemedText>
             </Pressable>
           </View>
+
+          {!!product.title && (
+            <Section title="Titulo">
+              <ThemedText style={[styles.value, { color: text }]}>
+                {product.title}
+              </ThemedText>
+            </Section>
+          )}
 
           {!!product.description && (
             <Section title="Descripción">
