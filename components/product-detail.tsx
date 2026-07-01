@@ -16,6 +16,9 @@ import {
   View,
 } from 'react-native';
 
+const heartOutline = require('@/assets/images/icons/no-favorito.png');
+const heartFilled = require('@/assets/images/icons/si-favorito.png');
+
 const noImage = require('@/assets/images/no-image.png');
 
 type Props = {
@@ -50,7 +53,6 @@ export function ProductDetail({ productId, onClose }: Props) {
   const { addToCart } = useCartStore();
   const background = useThemeColor({}, 'background');
   const text = useThemeColor({}, 'text');
-  const icon = useThemeColor({}, 'icon');
   const detailBackground = useThemeColor({}, 'detailBackground');
   const tabIconDefault = useThemeColor({}, 'tabIconDefault');
   const white = useThemeColor({}, 'buttonText');
@@ -147,14 +149,11 @@ export function ProductDetail({ productId, onClose }: Props) {
               onPress={() => toggleFavorite(product.id)}
               hitSlop={10}
             >
-              <ThemedText
-                style={[
-                  styles.heart,
-                  { color: favorite ? '#fca5a5' : icon },
-                ]}
-              >
-                {favorite ? '❤️' : '🤍'}
-              </ThemedText>
+              <Image
+                source={favorite ? heartFilled : heartOutline}
+                style={styles.heartIcon}
+                resizeMode="contain"
+              />
             </Pressable>
           </View>
 
@@ -300,7 +299,7 @@ export function ProductDetail({ productId, onClose }: Props) {
         />
       </View>
 
-      {/* ✅ CONFIRM MODAL */}
+      {/* CONFIRM MODAL */}
       <ConfirmModal
         visible={confirmOpen}
         title="Agregar al carrito"
@@ -357,6 +356,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
+  },
+
+  heartIcon: {
+    width: 32,
+    height: 32,
   },
 
   label: {
