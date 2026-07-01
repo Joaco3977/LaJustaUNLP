@@ -109,6 +109,7 @@ export function ProductCard({ product, width, onPress }: Props) {
         {!!product.unitDescription && (
           <ThemedText
             color="unitDescriptionText"
+            type="unitDescriptionText"
             style={styles.meta}
           >
             {product.unitDescription}
@@ -127,7 +128,6 @@ export function ProductCard({ product, width, onPress }: Props) {
             <ThemedText
               numberOfLines={1}
               color="unitDescriptionText"
-              style={styles.unitText}
             >
               {unitInfo}
             </ThemedText>
@@ -143,7 +143,6 @@ export function ProductCard({ product, width, onPress }: Props) {
           <ThemedText
             type="cardInfo"
             color="text"
-            style={styles.price}
           >
             ${product.price}
           </ThemedText>
@@ -169,7 +168,7 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    padding: 10,
+    padding: 6,
     gap: 2,
     flex: 1,
   },
@@ -190,16 +189,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
-  },
-
-  price: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-
-  unitText: {
-    fontSize: 12,
-    fontWeight: '600',
   },
 
   outOfStockRibbon: {

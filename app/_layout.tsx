@@ -3,9 +3,21 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+
+import { useCartStore } from '@/stores/cart.store';
+import { useFavoritesStore } from '@/stores/favorites.store';
 
 export default function RootLayout() {
   const scheme = useColorScheme() ?? 'light';
+
+  const loadFavorites = useFavoritesStore((state) => state.loadFavorites);
+  const loadCart = useCartStore((state) => state.loadCart);
+
+  useEffect(() => {
+    loadFavorites();
+    loadCart();
+  }, []);
 
   const theme = {
     ...(scheme === 'dark' ? DarkTheme : DefaultTheme),

@@ -79,8 +79,9 @@ const styles = StyleSheet.create({
   },
 
   cardTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
 
   cardInfo: {

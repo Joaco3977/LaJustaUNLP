@@ -30,6 +30,7 @@ export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
 
   const backgroundColor = useThemeColor({}, 'background');
+  const dividerColor = useThemeColor({}, 'tabIconDefault');
 
   const [categoryStack, setCategoryStack] = useState<Category[]>([]);
   const currentCategory = categoryStack.at(-1) ?? null;
@@ -144,16 +145,26 @@ export default function ProductsScreen() {
           )}
 
           {showTitle && (
-            <ThemedText style={styles.title}>
+            <ThemedText type="title" style={styles.title}>
               {titleText}
             </ThemedText>
           )}
 
           {!isSearching && subcategories.length > 0 && (
-            <CategoryGrid
-              categories={subcategories}
-              onPress={handleSelectCategory}
-            />
+            <>
+              <CategoryGrid
+                categories={subcategories}
+                onPress={handleSelectCategory}
+              />
+
+              {/* Línea divisora */}
+              <View
+                style={[
+                  styles.divider,
+                  { backgroundColor: dividerColor },
+                ]}
+              />
+            </>
           )}
 
           {showProducts &&
@@ -271,4 +282,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textAlign: 'center',
   },
+
+  divider: {
+    height: 1,
+    width: '100%',
+    marginVertical: 16,
+    opacity: 0.6,
+  },
+
 });
