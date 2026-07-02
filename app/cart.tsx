@@ -10,6 +10,7 @@ import {
 import { Product, ProductCard } from '@/components/product-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useCartStore } from '@/stores/cart.store';
 
@@ -125,9 +126,15 @@ export default function CartScreen() {
                   {/* BOTÓN ELIMINAR */}
                   <Pressable
                     style={styles.trashButton}
-                    onPress={() => removeFromCart(item.id)}
+                    onPress={() =>
+                      removeFromCart(item.id)
+                    }
                   >
-                    <ThemedText style={styles.trashText}>🗑</ThemedText>
+                    <IconSymbol
+                      name="trash.fill"
+                      size={16}
+                      color="#fff"
+                    />
                   </Pressable>
 
                   <View style={styles.row}>
@@ -293,13 +300,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    zIndex: 10,
-    width: 32,
-    height: 32,
+    backgroundColor: '#ff6f43a6',
     borderRadius: 16,
-    backgroundColor: '#000',
-    alignItems: 'center',
-    justifyContent: 'center',
+    padding: 6,
+    zIndex: 20,
     elevation: 4,
   },
 

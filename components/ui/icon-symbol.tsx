@@ -23,11 +23,12 @@ const MAPPING = {
   'person.3.fill': 'groups', // Para productores, 3 personas agrupadas.
   'gearshape.fill': 'settings',
   'cart.fill': 'shopping-cart', // Para carrito, un icono de carrito de compras.
-  'heart.fill': 'favorite', // Para nosotros, un icono de corazón.
   'shippingbox.fill': 'inventory', // Para productos, un icono de caja de envío.
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
   'arrow.right': 'arrow-forward', // Flecha del botón de búsqueda (SearchBar).
+  'info': 'info', // Para nosotros, un icono de información.
+  'trash.fill': 'delete', // Para eliminar, un icono de tacho de basura.
 } as IconMapping;
 
 /**
