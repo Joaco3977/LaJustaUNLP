@@ -8,11 +8,11 @@ import {
 import { AnimatedButton } from '@/components/animated-button';
 import { CategoryGrid } from '@/components/grids/category-grid';
 import { ProductGrid } from '@/components/grids/product-grid';
+import { CustomModal } from '@/components/modals/custom-modal';
 import { ProductDetail } from '@/components/product-detail';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { CustomModal } from '@/components/ui/custom-modal';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 
 import {

@@ -14,6 +14,9 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useCartStore } from '@/stores/cart.store';
 
+import { CustomModal } from '@/components/modals/custom-modal';
+import { ProductDetail } from '@/components/product-detail';
+
 const CARD_WIDTH = 140;
 
 type CartProduct = Product & {
@@ -30,6 +33,7 @@ export default function CartScreen() {
   } = useCartStore();
 
   const [products, setProducts] = useState<CartProduct[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
 
   const tab = useThemeColor({}, 'tab');
   const background = useThemeColor({}, 'background');
@@ -69,13 +73,15 @@ export default function CartScreen() {
     loadProducts();
   }, [cart]);
 
-  // TOTAL (solo productos con stock)
   const total = useMemo(() => {
     return products.reduce((acc, p) => {
       if ((p.stock ?? 0) === 0) return acc;
       return acc + p.price * p.cartQuantity;
     }, 0);
   }, [products]);
+
+  const openProduct = (id: number) => setSelectedProductId(id);
+  const closeProduct = () => setSelectedProductId(null);
 
   return (
     <>
@@ -99,9 +105,7 @@ export default function CartScreen() {
               ]}
               onPress={() => router.push('/products')}
             >
-              <ThemedText
-                style={{ color: white, fontSize: 16, fontWeight: 'bold' }}
-              >
+              <ThemedText style={{ color: white, fontSize: 16, fontWeight: 'bold' }}>
                 Ver productos
               </ThemedText>
             </Pressable>
@@ -126,9 +130,7 @@ export default function CartScreen() {
                   {/* BOTÓN ELIMINAR */}
                   <Pressable
                     style={styles.trashButton}
-                    onPress={() =>
-                      removeFromCart(item.id)
-                    }
+                    onPress={() => removeFromCart(item.id)}
                   >
                     <IconSymbol
                       name="trash.fill"
@@ -138,17 +140,14 @@ export default function CartScreen() {
                   </Pressable>
 
                   <View style={styles.row}>
+                    {/* 👇 CLICK ABRE DETALLE */}
                     <ProductCard
                       product={item}
                       width={CARD_WIDTH}
-                      onPress={() => {}}
+                      onPress={() => openProduct(item.id)}
                     />
 
-                    <View
-                      style={[
-                        styles.quantityBox,
-                      ]}
-                    >
+                    <View style={styles.quantityBox}>
                       <ThemedText style={{ color: button, fontSize: 20, fontWeight: 'bold' }}>
                         Cantidad
                       </ThemedText>
@@ -159,12 +158,8 @@ export default function CartScreen() {
 
                       <View style={styles.qtyControls}>
                         <Pressable
-                          disabled={
-                            disabled || item.cartQuantity <= 1
-                          }
-                          onPress={() =>
-                            decreaseQuantity(item.id)
-                          }
+                          disabled={disabled || item.cartQuantity <= 1}
+                          onPress={() => decreaseQuantity(item.id)}
                           style={[
                             styles.qtyButton,
                             { backgroundColor: button },
@@ -177,13 +172,8 @@ export default function CartScreen() {
                         </Pressable>
 
                         <Pressable
-                          disabled={
-                            disabled ||
-                            item.cartQuantity >= stock
-                          }
-                          onPress={() =>
-                            increaseQuantity(item.id)
-                          }
+                          disabled={disabled || item.cartQuantity >= stock}
+                          onPress={() => increaseQuantity(item.id)}
                           style={[
                             styles.qtyButton,
                             { backgroundColor: button },
@@ -204,8 +194,18 @@ export default function CartScreen() {
         )}
       </ThemedView>
 
+      {/* MODAL DETALLE PRODUCTO */}
+      <CustomModal visible={selectedProductId !== null} onClose={closeProduct}>
+        {selectedProductId !== null && (
+          <ProductDetail
+            productId={selectedProductId}
+            onClose={closeProduct}
+          />
+        )}
+      </CustomModal>
+
       {/* FOOTER */}
-      {cart.length > 0 && (
+      {cart.length > 0 && selectedProductId === null && (
         <View style={[styles.footer, { backgroundColor: tab }]}>
           <ThemedText style={styles.total} type="title">
             Total: ${total}
