@@ -2,29 +2,16 @@ import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Dimensions,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  View,
+  ScrollView,
 } from 'react-native';
 
 import { ConfirmModal } from '@/components/confirm-modal';
-import { Product, ProductCard } from '@/components/product-card';
+import { ProductGrid } from '@/components/grids/product-grid';
+import { Product } from '@/components/product-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useFavoritesStore } from '@/stores/favorites.store';
-
-const GAP = 12;
-const PADDING = 16;
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const ITEM_WIDTH = (SCREEN_WIDTH - PADDING * 2 - GAP) / 2;
-
-// altura mínima REAL de la ProductCard
-const CARD_MIN_HEIGHT = ITEM_WIDTH + 36 + 96;
 
 export default function FavoritesScreen() {
   const { favorites, loadFavorites, removeFavorite } =
@@ -76,9 +63,7 @@ export default function FavoritesScreen() {
     <>
       <Stack.Screen options={{ title: 'Favoritos' }} />
 
-      <ThemedView
-        style={[styles.container, { backgroundColor }]}
-      >
+      <ThemedView style={[styles.container, { backgroundColor }]}>
         {favorites.length === 0 ? (
           <ThemedText
             style={[
@@ -93,46 +78,19 @@ export default function FavoritesScreen() {
         ) : loading ? (
           <ActivityIndicator color={tintColor} />
         ) : (
-          <FlatList
-            data={products}
-            keyExtractor={item => item.id.toString()}
-            numColumns={2}
-            contentContainerStyle={styles.list}
-            columnWrapperStyle={{
-              gap: GAP,
-              marginBottom: GAP,
-            }}
-            renderItem={({ item }) => (
-              <View
-                style={[
-                  styles.cardWrapper,
-                  {
-                    width: ITEM_WIDTH,
-                    minHeight: CARD_MIN_HEIGHT,
-                  },
-                ]}
-              >
-                <ProductCard
-                  product={item}
-                  width={ITEM_WIDTH}
-                  onPress={() => {}}
-                />
-
-                <Pressable
-                  style={styles.trashButton}
-                  onPress={() =>
-                    setSelectedProductId(item.id)
-                  }
-                >
-                  <IconSymbol
-                    name="trash.fill"
-                    size={16}
-                    color="#fff"
-                  />
-                </Pressable>
-              </View>
-            )}
-          />
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
+          >
+            <ProductGrid
+              products={products}
+              onSelectProduct={() => {}}
+              showDelete
+              onDeleteProduct={(id) =>
+                setSelectedProductId(id)
+              }
+            />
+          </ScrollView>
         )}
       </ThemedView>
 
@@ -154,33 +112,19 @@ export default function FavoritesScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = {
   container: {
     flex: 1,
-    padding: PADDING,
+    marginTop: 12,
+    paddingHorizontal: 24,
   },
 
-  list: {
-    paddingBottom: 20,
+  scrollContent: {
+    paddingBottom: 24,
   },
 
   emptyText: {
-    textAlign: 'center',
+    textAlign: 'center' as const,
     marginTop: 48,
   },
-
-  cardWrapper: {
-    position: 'relative',
-  },
-
-  trashButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#ff6f43a6',
-    borderRadius: 16,
-    padding: 6,
-    zIndex: 20,
-    elevation: 4,
-  },
-});
+};
