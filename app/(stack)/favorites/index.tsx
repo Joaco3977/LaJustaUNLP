@@ -7,9 +7,9 @@ import {
 
 import { ProductGrid } from '@/components/grids/product-grid';
 import { ConfirmModal } from '@/components/modals/confirm-modal';
-import { Product } from '@/components/product-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useProducts } from '@/hooks/use-products';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useFavoritesStore } from '@/stores/favorites.store';
 
@@ -20,8 +20,9 @@ export default function FavoritesScreen() {
   const { favorites, loadFavorites, removeFavorite } =
     useFavoritesStore();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { products, loading } = useProducts({
+    ids: favorites,
+  });
 
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
@@ -33,35 +34,6 @@ export default function FavoritesScreen() {
   useEffect(() => {
     loadFavorites();
   }, []);
-
-  useEffect(() => {
-    if (favorites.length === 0) {
-      setProducts([]);
-      return;
-    }
-
-    const loadProducts = async () => {
-      try {
-        setLoading(true);
-
-        const responses = await Promise.all(
-          favorites.map(id =>
-            fetch(
-              `https://www.lajustaunlp.com.ar/api/product/${id}`
-            ).then(res => res.json())
-          )
-        );
-
-        setProducts(responses);
-      } catch (error) {
-        console.warn('Error loading favorites', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProducts();
-  }, [favorites]);
 
   const openProduct = (id: number) => setSelectedProductId(id);
   const closeProduct = () => setSelectedProductId(null);
@@ -94,7 +66,7 @@ export default function FavoritesScreen() {
         )}
       </ThemedView>
 
-      {/* 🔥 MODAL DETALLE PRODUCTO */}
+      {/* MODAL DETALLE PRODUCTO */}
       <CustomModal visible={selectedProductId !== null} onClose={closeProduct}>
         {selectedProductId !== null && (
           <ProductDetail
@@ -104,7 +76,7 @@ export default function FavoritesScreen() {
         )}
       </CustomModal>
 
-      {/* 🗑 CONFIRM DELETE */}
+      {/* CONFIRM DELETE */}
       <ConfirmModal
         visible={selectedDeleteId !== null}
         title="¿Eliminar de favoritos?"

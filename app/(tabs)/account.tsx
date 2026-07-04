@@ -1,20 +1,86 @@
-import { StyleSheet } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAuthStore } from '@/stores/auth.store';
 
 export default function AccountScreen() {
+  const user = useAuthStore((state) => state.user);
+
+  const buttonBackgroundColor = useThemeColor({}, 'tabIconDefault');
+  const buttonTextColor = useThemeColor({}, 'buttonText');
+
   return (
     <ThemedView style={styles.container}>
-      <ThemedText type="title">Work in Progress</ThemedText>
-
-      <ThemedText type="subtitle" style={styles.subtitle}>
-        Aquí se construirá la sección Cuenta
+      {/* Saludo */}
+      <ThemedText type="title" style={styles.title}>
+        ¡Hola {user?.firstName}!
       </ThemedText>
 
-      <ThemedText type="default" style={styles.note}>
-        Pantalla solo para desarrollo
-      </ThemedText>
+      {/* Opciones */}
+      <ThemedView style={styles.menu}>
+        <Pressable
+          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+          onPress={() => router.push('/account/personal-data')}
+        >
+          <ThemedText
+            type="defaultSemiBold"
+            style={[styles.buttonText, { color: buttonTextColor }]}
+          >
+            Mis datos personales
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+          onPress={() => router.push('/account/orders')}
+        >
+          <ThemedText
+            type="defaultSemiBold"
+            style={[styles.buttonText, { color: buttonTextColor }]}
+          >
+            Mis compras
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+          onPress={() => router.push('/account/pickup-nodes')}
+        >
+          <ThemedText
+            type="defaultSemiBold"
+            style={[styles.buttonText, { color: buttonTextColor }]}
+          >
+            Nodos de retiro
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+          onPress={() => console.log('AYUDA')}
+        >
+          <ThemedText
+            type="defaultSemiBold"
+            style={[styles.buttonText, { color: buttonTextColor }]}
+          >
+            Ayuda
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+          onPress={() => useAuthStore.getState().logout()}
+        >
+          <ThemedText
+            type="defaultSemiBold"
+            style={[styles.buttonText, { color: buttonTextColor }]}
+          >
+            Cerrar sesión
+          </ThemedText>
+        </Pressable>
+      </ThemedView>
     </ThemedView>
   );
 }
@@ -22,15 +88,23 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
     padding: 24,
-    gap: 12,
   },
-  subtitle: {
-    textAlign: 'center',
+  title: {
+    marginBottom: 24,
   },
-  note: {
-    opacity: 0.6,
+  menu: {
+    gap: 16,
+  },
+  button: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  buttonText: {
+    fontSize: 16,
+    lineHeight: 24,
   },
 });

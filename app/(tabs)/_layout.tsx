@@ -1,4 +1,4 @@
-import { Tabs, useRouter } from 'expo-router';
+import { Redirect, Tabs, useRouter } from 'expo-router';
 import React from 'react';
 import { Image, Pressable, StyleSheet, View } from 'react-native';
 
@@ -8,17 +8,27 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? 'light';
   const router = useRouter();
 
+  const isAuthenticated = useAuthStore(
+    state => state.isAuthenticated
+  );
+
   const totalItems = useCartStore(
     state => state.getTotalItems()
   );
 
   const theme = Colors[colorScheme];
+
+  // GUARD DE AUTENTICACIÓN
+  if (!isAuthenticated) {
+    return <Redirect href="/auth" />;
+  }
 
   return (
     <Tabs
@@ -90,7 +100,11 @@ export default function TabLayout() {
         options={{
           title: 'Productos',
           tabBarIcon: ({ color }) => (
-            <IconSymbol name="shippingbox.fill" size={28} color={color} />
+            <IconSymbol
+              name="shippingbox.fill"
+              size={28}
+              color={color}
+            />
           ),
         }}
       />
@@ -100,7 +114,11 @@ export default function TabLayout() {
         options={{
           title: 'Productores',
           tabBarIcon: ({ color }) => (
-            <IconSymbol name="person.3.fill" size={28} color={color} />
+            <IconSymbol
+              name="person.3.fill"
+              size={28}
+              color={color}
+            />
           ),
         }}
       />
@@ -120,7 +138,11 @@ export default function TabLayout() {
         options={{
           title: 'Mi Cuenta',
           tabBarIcon: ({ color }) => (
-            <IconSymbol name="person.crop.circle" size={28} color={color} />
+            <IconSymbol
+              name="person.crop.circle"
+              size={28}
+              color={color}
+            />
           ),
         }}
       />
@@ -141,25 +163,23 @@ const styles = StyleSheet.create({
     borderRadius: 16,
   },
   cartIconWrapper: {
-  position: 'relative',
-},
-
-badge: {
-  position: 'absolute',
-  top: -6,
-  right: -8,
-  minWidth: 18,
-  height: 18,
-  borderRadius: 9,
-  backgroundColor: '#ff7043',
-  alignItems: 'center',
-  justifyContent: 'center',
-  paddingHorizontal: 4,
-},
-
-badgeText: {
-  color: '#fff',
-  fontSize: 11,
-  fontWeight: '700',
-},
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#ff7043',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
 });

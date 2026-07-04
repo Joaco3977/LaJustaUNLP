@@ -11,6 +11,7 @@ import { Product, ProductCard } from '@/components/product-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useProducts } from '@/hooks/use-products';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useCartStore } from '@/stores/cart.store';
 
@@ -32,8 +33,8 @@ export default function CartScreen() {
     removeFromCart,
   } = useCartStore();
 
-  const [products, setProducts] = useState<CartProduct[]>([]);
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [selectedProductId, setSelectedProductId] =
+    useState<number | null>(null);
 
   const tab = useThemeColor({}, 'tab');
   const background = useThemeColor({}, 'background');
@@ -47,38 +48,36 @@ export default function CartScreen() {
     loadCart();
   }, []);
 
-  useEffect(() => {
-    if (cart.length === 0) {
-      setProducts([]);
-      return;
-    }
+  const productIds = useMemo(() => {
+    return cart.map(item => item.productId);
+  }, [cart.map(item => item.productId).join(',')]);
 
-    const loadProducts = async () => {
-      const responses = await Promise.all(
-        cart.map(async (item) => {
-          const product: Product = await fetch(
-            `https://www.lajustaunlp.com.ar/api/product/${item.productId}`
-          ).then((res) => res.json());
+  const productsOptions = useMemo(
+    () => ({ ids: productIds }),
+    [productIds]
+  );
 
-          return {
-            ...product,
-            cartQuantity: item.quantity,
-          };
-        })
-      );
+  /* Fetch centralizado */
+  const { products, loading } = useProducts(productsOptions);
 
-      setProducts(responses);
-    };
+  /* Merge producto + cantidad */
+  const productsWithQuantity: CartProduct[] = useMemo(() => {
+    return products.map(product => {
+      const cartItem = cart.find(c => c.productId === product.id);
 
-    loadProducts();
-  }, [cart]);
+      return {
+        ...product,
+        cartQuantity: cartItem?.quantity ?? 0,
+      };
+    });
+  }, [products, cart]);
 
   const total = useMemo(() => {
-    return products.reduce((acc, p) => {
+    return productsWithQuantity.reduce((acc, p) => {
       if ((p.stock ?? 0) === 0) return acc;
       return acc + p.price * p.cartQuantity;
     }, 0);
-  }, [products]);
+  }, [productsWithQuantity]);
 
   const openProduct = (id: number) => setSelectedProductId(id);
   const closeProduct = () => setSelectedProductId(null);
@@ -105,14 +104,24 @@ export default function CartScreen() {
               ]}
               onPress={() => router.push('/products')}
             >
-              <ThemedText style={{ color: white, fontSize: 16, fontWeight: 'bold' }}>
+              <ThemedText
+                style={{
+                  color: white,
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                }}
+              >
                 Ver productos
               </ThemedText>
             </Pressable>
           </View>
+        ) : loading && products.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <ThemedText>Cargando productos...</ThemedText>
+          </View>
         ) : (
           <FlatList
-            data={products}
+            data={productsWithQuantity}
             keyExtractor={(item) => item.id.toString()}
             contentContainerStyle={styles.list}
             renderItem={({ item }) => {
@@ -140,7 +149,6 @@ export default function CartScreen() {
                   </Pressable>
 
                   <View style={styles.row}>
-                    {/* 👇 CLICK ABRE DETALLE */}
                     <ProductCard
                       product={item}
                       width={CARD_WIDTH}
@@ -148,11 +156,23 @@ export default function CartScreen() {
                     />
 
                     <View style={styles.quantityBox}>
-                      <ThemedText style={{ color: button, fontSize: 20, fontWeight: 'bold' }}>
+                      <ThemedText
+                        style={{
+                          color: button,
+                          fontSize: 20,
+                          fontWeight: 'bold',
+                        }}
+                      >
                         Cantidad
                       </ThemedText>
 
-                      <ThemedText style={{ color: button, fontSize: 20, fontWeight: 'bold' }}>
+                      <ThemedText
+                        style={{
+                          color: button,
+                          fontSize: 20,
+                          fontWeight: 'bold',
+                        }}
+                      >
                         {item.cartQuantity}
                       </ThemedText>
 
@@ -166,13 +186,21 @@ export default function CartScreen() {
                             disabled && styles.disabledButton,
                           ]}
                         >
-                          <ThemedText style={{ color: white, fontSize: 16, fontWeight: 'bold' }}>
+                          <ThemedText
+                            style={{
+                              color: white,
+                              fontSize: 16,
+                              fontWeight: 'bold',
+                            }}
+                          >
                             -
                           </ThemedText>
                         </Pressable>
 
                         <Pressable
-                          disabled={disabled || item.cartQuantity >= stock}
+                          disabled={
+                            disabled || item.cartQuantity >= stock
+                          }
                           onPress={() => increaseQuantity(item.id)}
                           style={[
                             styles.qtyButton,
@@ -180,7 +208,13 @@ export default function CartScreen() {
                             disabled && styles.disabledButton,
                           ]}
                         >
-                          <ThemedText style={{ color: white, fontSize: 16, fontWeight: 'bold' }}>
+                          <ThemedText
+                            style={{
+                              color: white,
+                              fontSize: 16,
+                              fontWeight: 'bold',
+                            }}
+                          >
                             +
                           </ThemedText>
                         </Pressable>
@@ -195,7 +229,10 @@ export default function CartScreen() {
       </ThemedView>
 
       {/* MODAL DETALLE PRODUCTO */}
-      <CustomModal visible={selectedProductId !== null} onClose={closeProduct}>
+      <CustomModal
+        visible={selectedProductId !== null}
+        onClose={closeProduct}
+      >
         {selectedProductId !== null && (
           <ProductDetail
             productId={selectedProductId}
@@ -218,7 +255,13 @@ export default function CartScreen() {
             ]}
             onPress={() => console.log('TOTAL:', total)}
           >
-            <ThemedText style={{ color: white, fontSize: 16, fontWeight: 'bold' }}>
+            <ThemedText
+              style={{
+                color: white,
+                fontSize: 16,
+                fontWeight: 'bold',
+              }}
+            >
               Continuar
             </ThemedText>
           </Pressable>
@@ -276,11 +319,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  qtyNumber: {
-    fontSize: 20,
-    fontWeight: '700',
-  },
-
   qtyControls: {
     flexDirection: 'row',
     gap: 12,
@@ -305,11 +343,6 @@ const styles = StyleSheet.create({
     padding: 6,
     zIndex: 20,
     elevation: 4,
-  },
-
-  trashText: {
-    color: '#fff',
-    fontSize: 16,
   },
 
   footer: {
@@ -342,17 +375,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 32,
     gap: 8,
-  },
-
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-
-  emptySubtitle: {
-    fontSize: 14,
-    opacity: 0.6,
-    textAlign: 'center',
   },
 });
