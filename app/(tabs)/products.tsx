@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import {
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -14,6 +16,7 @@ import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
+import { useRouter } from 'expo-router';
 
 import {
   Category,
@@ -24,13 +27,17 @@ import { useProducts } from '@/hooks/use-products';
 import { useSearchBar } from '@/hooks/use-search-bar';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
+
 const PAGE_SIZE = 12;
 
 export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
 
   const backgroundColor = useThemeColor({}, 'background');
-  const dividerColor = useThemeColor({}, 'tabIconDefault');
+  const laJustaColor = useThemeColor({}, 'tabIconDefault');
+  const buttonTextColor = useThemeColor({}, 'buttonText');
+
+  const heartFilled = require('@/assets/images/icons/si-favorito.png');
 
   const [categoryStack, setCategoryStack] = useState<Category[]>([]);
   const currentCategory = categoryStack.at(-1) ?? null;
@@ -40,6 +47,8 @@ export default function ProductsScreen() {
     useState<number | null>(null);
 
   const [page, setPage] = useState(0);
+
+  const router = useRouter();
 
   const {
     searchText,
@@ -54,6 +63,8 @@ export default function ProductsScreen() {
   });
 
   const isSearching = searchText.trim().length > 0;
+
+  
 
   const { products, loading, hasMore } = useProducts({
     page,
@@ -138,10 +149,25 @@ export default function ProductsScreen() {
           )}
 
           {isRoot && !isSearching && (
-            <CategoryGrid
-              categories={rootCategories}
-              onPress={handleSelectCategory}
-            />
+            <View>
+              <CategoryGrid
+                categories={rootCategories}
+                onPress={handleSelectCategory}
+              />
+
+              <Pressable
+                onPress={() => router.push('/favorites')}
+                style={[styles.favoritesButton, { backgroundColor: laJustaColor }]}
+              >
+                <ThemedText style={[styles.favoritesText, { color: buttonTextColor }]}>
+                  Mis favoritos
+                </ThemedText>
+                <Image
+                  source={heartFilled}
+                  style={styles.favoritesIcon}
+                />
+              </Pressable>
+            </View>
           )}
 
           {showTitle && (
@@ -161,7 +187,7 @@ export default function ProductsScreen() {
               <View
                 style={[
                   styles.divider,
-                  { backgroundColor: dividerColor },
+                  { backgroundColor: laJustaColor },
                 ]}
               />
             </>
@@ -270,6 +296,27 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
+  },
+
+  favoritesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+
+  favoritesIcon: {
+    width: 28,
+    height: 28,
+    resizeMode: 'contain',
+  },
+
+  favoritesText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 
   pageText: {
