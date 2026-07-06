@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { NewsCard } from '@/components/news-card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Colors } from '@/constants/theme';
 import { useNews } from '@/hooks/use-news';
 
 /* ===== TEXTO ESTÁTICO DE PRESENTACIÓN ===== */
@@ -35,11 +36,9 @@ const PRESENTATION = [
 /* ===== PAGINACIÓN ===== */
 const PAGE_SIZE = 10;
 
-/* ===== COLORES DE MARCA (fijos) ===== */
-const ACCENT_ORANGE = '#e07b4a';
-const SECTION_GREEN = '#2e7d32';
-
 export default function AboutScreen() {
+  // theme = colores del tema activo (claro/oscuro), para la card de presentación.
+  const theme = Colors[useColorScheme() ?? 'light'];
   const [page, setPage] = useState(0);
   const { news, total, loading, error, refetch } = useNews(page, PAGE_SIZE);
 
@@ -56,9 +55,16 @@ export default function AboutScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
 
         {/* ===== SECCIÓN PRESENTACIÓN (estática) ===== */}
-        <View style={styles.presentationCard}>
-          <ThemedText style={styles.presentationTitle}>PRESENTACIÓN</ThemedText>
-          <View style={styles.titleUnderline} />
+        <View
+          style={[
+            styles.presentationCard,
+            { backgroundColor: theme.card, borderColor: theme.detailBackground },
+          ]}
+        >
+          <ThemedText color="title" style={styles.presentationTitle}>
+            PRESENTACIÓN
+          </ThemedText>
+          <View style={[styles.titleUnderline, { backgroundColor: theme.tint }]} />
 
           {PRESENTATION.map((item, i) => (
             <ThemedText key={i} style={styles.paragraph}>
@@ -69,29 +75,29 @@ export default function AboutScreen() {
         </View>
 
         {/* ===== SECCIÓN PRENSA (dinámica) ===== */}
-        <ThemedText style={[styles.sectionTitle, { color: SECTION_GREEN }]}>
+        <ThemedText color="title" style={styles.sectionTitle}>
           PRENSA
         </ThemedText>
 
         {/* Contador "1 - 10 de 12" */}
         {!loading && !error && total > 0 && (
-          <ThemedText style={styles.count}>
+          <ThemedText color="subtext" style={styles.count}>
             {from} - {to} de {total}
           </ThemedText>
         )}
 
         {/* ESTADOS */}
         {loading ? (
-          <ThemedText style={styles.message}>Cargando noticias...</ThemedText>
+          <ThemedText color="subtext" style={styles.message}>Cargando noticias...</ThemedText>
         ) : error ? (
           <View style={styles.center}>
-            <ThemedText style={styles.message}>
+            <ThemedText color="subtext" style={styles.message}>
               No se pudieron cargar las noticias.
             </ThemedText>
             <AnimatedButton title="Reintentar" onPress={refetch} />
           </View>
         ) : news.length === 0 ? (
-          <ThemedText style={styles.message}>No hay noticias para mostrar</ThemedText>
+          <ThemedText color="subtext" style={styles.message}>No hay noticias para mostrar</ThemedText>
         ) : (
           news.map((item) => <NewsCard key={item.id} item={item} />)
         )}
@@ -99,21 +105,21 @@ export default function AboutScreen() {
         {/* PAGINACIÓN */}
         {!loading && !error && totalPages > 1 && (
           <View style={styles.pagination}>
-            {hasPrev ? (
-              <AnimatedButton title="← Anterior" onPress={() => setPage(page - 1)} />
-            ) : (
-              <View style={styles.spacer} />
-            )}
+            <AnimatedButton
+              title="Anterior"
+              onPress={() => setPage(page - 1)}
+              disabled={!hasPrev}
+            />
 
-            <ThemedText>
+            <ThemedText color="subtext" style={styles.pageText}>
               Página {page + 1} de {totalPages}
             </ThemedText>
 
-            {hasNext ? (
-              <AnimatedButton title="Siguiente →" onPress={() => setPage(page + 1)} />
-            ) : (
-              <View style={styles.spacer} />
-            )}
+            <AnimatedButton
+              title="Siguiente"
+              onPress={() => setPage(page + 1)}
+              disabled={!hasNext}
+            />
           </View>
         )}
 
@@ -137,7 +143,12 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 32,
     borderWidth: 1,
-    borderColor: '#ddd',
+    // sombra igual que las cards (product-card / producer-card)
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 5,
   },
   presentationTitle: {
     fontSize: 22,
@@ -147,7 +158,6 @@ const styles = StyleSheet.create({
   titleUnderline: {
     width: 60,
     height: 3,
-    backgroundColor: ACCENT_ORANGE,
     marginBottom: 20,
     borderRadius: 2,
   },
@@ -169,7 +179,6 @@ const styles = StyleSheet.create({
   },
   count: {
     fontSize: 13,
-    opacity: 0.6,
     marginBottom: 16,
     textAlign: 'right',
   },
@@ -178,7 +187,6 @@ const styles = StyleSheet.create({
   message: {
     textAlign: 'center',
     marginTop: 20,
-    opacity: 0.8,
   },
   center: {
     alignItems: 'center',
@@ -189,11 +197,12 @@ const styles = StyleSheet.create({
   /* PAGINACIÓN */
   pagination: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
+    gap: 16,
     marginTop: 20,
   },
-  spacer: {
-    width: 100,
+  pageText: {
+    fontSize: 14,
   },
 });

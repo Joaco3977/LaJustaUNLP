@@ -12,9 +12,8 @@ import {
 
 const noImage = require('@/assets/images/no-image.png');
 
-// Colores de marca de La Justa, fijos (no cambian con el tema).
+// Color de marca de La Justa, fijo (no cambia con el tema).
 const ACCENT_ORANGE = '#e07b4a';
-const LINK_GREEN = '#2e7d32';
 
 type Props = {
   item: NewsItem;
@@ -32,7 +31,7 @@ export function NewsCard({ item }: Props) {
   return (
     <Pressable
       onPress={handlePress}
-      style={[styles.card, { backgroundColor: theme.background, borderColor: theme.icon }]}
+      style={[styles.card, { backgroundColor: theme.card, borderColor: theme.detailBackground }]}
     >
       {/* Línea naranja de acento arriba de cada tarjeta, igual que la web */}
       <View style={styles.accent} />
@@ -68,7 +67,7 @@ export function NewsCard({ item }: Props) {
 
           {!!item.url?.trim() && (
             <ThemedText
-              style={[styles.url, { color: LINK_GREEN }]}
+              style={[styles.url, { color: theme.title }]}
               numberOfLines={2}
             >
               {item.url.trim()}
@@ -86,7 +85,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: 'hidden',
     marginBottom: 16,
-    elevation: 1,
+    // sombra igual que las cards de producto/productor
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 5,
   },
   accent: {
     height: 4,
