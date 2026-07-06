@@ -46,6 +46,8 @@ export function ImageCarousel({ images, height = 180 }: Props) {
       <ScrollView
         horizontal
         pagingEnabled
+        disableIntervalMomentum
+        decelerationRate="fast"
         showsHorizontalScrollIndicator={false}
         onScroll={onScroll}
         scrollEventThrottle={16}

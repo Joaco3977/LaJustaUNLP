@@ -67,8 +67,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     overflow: 'hidden',
     marginBottom: 16,
-    elevation: 2,
     borderWidth: StyleSheet.hairlineWidth,
+    // Sombra igual que la card de productos (product-card.tsx)
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 5,
   },
   content: {
     padding: 14,
