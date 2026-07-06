@@ -12,7 +12,9 @@ import { Stack } from 'expo-router';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAuth } from '@/hooks/use-user';
 import { useAuthStore } from '@/stores/auth.store';
+
 
 type FormState = {
   firstName: string;
@@ -27,6 +29,8 @@ type FormState = {
 
 export default function PersonalDataScreen() {
   const user = useAuthStore((state) => state.user);
+
+  const { updateUser } = useAuth();
 
   const [form, setForm] = useState<FormState>({
     firstName: '',
@@ -127,8 +131,31 @@ export default function PersonalDataScreen() {
                 opacity: canSubmit ? 1 : 0.6,
               },
             ]}
-            onPress={() => {
-              console.log('Datos actualizados:', form);
+            onPress={async () => {
+              if (!user) return;
+
+              try {
+                const payload = {
+                  ...user,
+                  firstName: form.firstName,
+                  lastName: form.lastName,
+                  email: form.email,
+                  phone: form.phone,
+                  address: {
+                    ...user.address,
+                    street: form.street,
+                    number: form.number,
+                    apartment: form.apartment || null,
+                    floor: form.floor || null,
+                  },
+                };
+
+                await updateUser(payload);
+
+                console.log('Usuario actualizado correctamente');
+              } catch (error) {
+                console.error('Error al actualizar usuario', error);
+              }
             }}
           >
             <ThemedText style={{ color: '#fff' }} type="defaultSemiBold">

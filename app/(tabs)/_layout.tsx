@@ -44,6 +44,11 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.tabIconSelected,
         tabBarInactiveTintColor: theme.tabIconDefault,
 
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
+
         headerLeft: () => (
           <View style={styles.leftContainer}>
             <Image

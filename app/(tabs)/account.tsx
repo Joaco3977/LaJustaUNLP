@@ -1,16 +1,13 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
+import { AnimatedButton } from '@/components/animated-button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useThemeColor } from '@/hooks/use-theme-color';
 import { useAuthStore } from '@/stores/auth.store';
 
 export default function AccountScreen() {
   const user = useAuthStore((state) => state.user);
-
-  const buttonBackgroundColor = useThemeColor({}, 'tabIconDefault');
-  const buttonTextColor = useThemeColor({}, 'buttonText');
 
   return (
     <ThemedView style={styles.container}>
@@ -21,65 +18,47 @@ export default function AccountScreen() {
 
       {/* Opciones */}
       <ThemedView style={styles.menu}>
-        <Pressable
-          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+        <AnimatedButton
+          title="Mis datos personales"
           onPress={() => router.push('/account/personal-data')}
-        >
-          <ThemedText
-            type="defaultSemiBold"
-            style={[styles.buttonText, { color: buttonTextColor }]}
-          >
-            Mis datos personales
-          </ThemedText>
-        </Pressable>
+          icon={{ type: 'material', name: 'person' }}
+          style={styles.fullWidthButton}
+        />
 
-        <Pressable
-          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+        <AnimatedButton
+          title="Cambiar contraseña"
+          onPress={() => router.push('/account/change-password')}
+          icon={{ type: 'material', name: 'lock' }}
+          style={styles.fullWidthButton}
+        />
+
+        <AnimatedButton
+          title="Mis compras"
           onPress={() => router.push('/account/orders')}
-        >
-          <ThemedText
-            type="defaultSemiBold"
-            style={[styles.buttonText, { color: buttonTextColor }]}
-          >
-            Mis compras
-          </ThemedText>
-        </Pressable>
+          icon={{ type: 'material', name: 'receipt-long' }}
+          style={styles.fullWidthButton}
+        />
 
-        <Pressable
-          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+        <AnimatedButton
+          title="Nodos de retiro"
           onPress={() => router.push('/account/pickup-nodes')}
-        >
-          <ThemedText
-            type="defaultSemiBold"
-            style={[styles.buttonText, { color: buttonTextColor }]}
-          >
-            Nodos de retiro
-          </ThemedText>
-        </Pressable>
+          icon={{ type: 'material', name: 'location-on' }}
+          style={styles.fullWidthButton}
+        />
 
-        <Pressable
-          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
-          onPress={() => console.log('AYUDA')}
-        >
-          <ThemedText
-            type="defaultSemiBold"
-            style={[styles.buttonText, { color: buttonTextColor }]}
-          >
-            Ayuda
-          </ThemedText>
-        </Pressable>
+        <AnimatedButton
+          title="Ayuda"
+          onPress={() => router.push('/account/help')}
+          icon={{ type: 'material', name: 'help-outline' }}
+          style={styles.fullWidthButton}
+        />
 
-        <Pressable
-          style={[styles.button, { backgroundColor: buttonBackgroundColor }]}
+        <AnimatedButton
+          title="Cerrar sesión"
           onPress={() => useAuthStore.getState().logout()}
-        >
-          <ThemedText
-            type="defaultSemiBold"
-            style={[styles.buttonText, { color: buttonTextColor }]}
-          >
-            Cerrar sesión
-          </ThemedText>
-        </Pressable>
+          icon={{ type: 'material', name: 'logout' }}
+          style={styles.fullWidthButton}
+        />
       </ThemedView>
     </ThemedView>
   );
@@ -90,21 +69,17 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 24,
   },
+
   title: {
     marginBottom: 24,
   },
+
   menu: {
     gap: 16,
   },
-  button: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
-  },
-  buttonText: {
-    fontSize: 16,
-    lineHeight: 24,
+
+  fullWidthButton: {
+    alignSelf: 'stretch',
+    justifyContent: 'center',
   },
 });

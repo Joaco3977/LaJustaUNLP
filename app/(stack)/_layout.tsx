@@ -24,7 +24,7 @@ export default function StackLayout() {
         headerStyle: {
           backgroundColor: Colors[scheme].tab,
         },
-        headerTintColor: Colors[scheme].tabName,
+        headerTintColor: Colors[scheme].tabIconDefault,
         headerTitleStyle: {
           fontWeight: '700',
         },
