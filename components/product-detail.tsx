@@ -1,10 +1,13 @@
 import { AnimatedButton } from '@/components/animated-button';
-import { ConfirmModal } from '@/components/confirm-modal';
+import { AfterBuyModal } from '@/components/modals/after-buy-modal';
+import { ConfirmModal } from '@/components/modals/confirm-modal';
 import { ThemedText } from '@/components/themed-text';
 import { ImageZoomModal } from '@/components/ui/image-zoom-modal';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useCartStore } from '@/stores/cart.store';
 import { useFavoritesStore } from '@/stores/favorites.store';
+import { useRouter } from 'expo-router';
 
 import { useEffect, useState } from 'react';
 import {
@@ -15,6 +18,8 @@ import {
   View,
 } from 'react-native';
 
+const heartOutline = require('@/assets/images/icons/no-favorito.png');
+const heartFilled = require('@/assets/images/icons/si-favorito.png');
 const noImage = require('@/assets/images/no-image.png');
 
 type Props = {
@@ -40,21 +45,25 @@ type Product = {
   categories?: { id: number; name: string }[];
 };
 
+type ModalFlow = 'none' | 'confirm' | 'afterBuy';
+
 export function ProductDetail({ productId, onClose }: Props) {
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [imageOpen, setImageOpen] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-  const [confirmOpen, setConfirmOpen] = useState(false); // ✅ NUEVO
+
+  const [modalFlow, setModalFlow] = useState<ModalFlow>('none');
+
+  const { addToCart } = useCartStore();
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const router = useRouter();
 
   const background = useThemeColor({}, 'background');
   const text = useThemeColor({}, 'text');
-  const icon = useThemeColor({}, 'icon');
   const detailBackground = useThemeColor({}, 'detailBackground');
   const tabIconDefault = useThemeColor({}, 'tabIconDefault');
   const white = useThemeColor({}, 'buttonText');
-
-  const { isFavorite, toggleFavorite } = useFavoritesStore();
 
   useEffect(() => {
     fetch(`https://www.lajustaunlp.com.ar/api/product/${productId}`)
@@ -76,14 +85,18 @@ export function ProductDetail({ productId, onClose }: Props) {
 
   const increase = () =>
     setQuantity((q) => Math.min(q + 1, stock));
+
   const decrease = () =>
     setQuantity((q) => Math.max(q - 1, 1));
 
+  const closeFlow = () => setModalFlow('none');
+
   const handleBuy = () => {
-    console.log(
-      `Agregar carrito ID: ${product.id}, Cantidad: ${quantity}`
-    );
-    setConfirmOpen(false); // ✅ cerrar modal
+    if (!product) return;
+
+    addToCart(product.id, quantity);
+
+    setModalFlow('afterBuy');
   };
 
   const Section = ({
@@ -136,7 +149,6 @@ export function ProductDetail({ productId, onClose }: Props) {
             />
           </Pressable>
 
-          {/* PRECIO + FAVORITO */}
           <View style={styles.priceRow}>
             <ThemedText style={[styles.price, { color: text }]}>
               ${product.price}
@@ -146,16 +158,21 @@ export function ProductDetail({ productId, onClose }: Props) {
               onPress={() => toggleFavorite(product.id)}
               hitSlop={10}
             >
-              <ThemedText
-                style={[
-                  styles.heart,
-                  { color: favorite ? '#fca5a5' : icon },
-                ]}
-              >
-                {favorite ? '❤️' : '🤍'}
-              </ThemedText>
+              <Image
+                source={favorite ? heartFilled : heartOutline}
+                style={styles.heartIcon}
+                resizeMode="contain"
+              />
             </Pressable>
           </View>
+
+          {!!product.title && (
+            <Section title="Titulo">
+              <ThemedText style={[styles.value, { color: text }]}>
+                {product.title}
+              </ThemedText>
+            </Section>
+          )}
 
           {!!product.description && (
             <Section title="Descripción">
@@ -204,9 +221,7 @@ export function ProductDetail({ productId, onClose }: Props) {
             !!product.unitQuantity &&
             !!product.unit?.code && (
               <Section title={product.unit.description}>
-                <ThemedText
-                  style={[styles.value, { color: text }]}
-                >
+                <ThemedText style={[styles.value, { color: text }]}>
                   {product.unitQuantity} {product.unit.code}
                 </ThemedText>
               </Section>
@@ -233,10 +248,7 @@ export function ProductDetail({ productId, onClose }: Props) {
                     onPress={decrease}
                   >
                     <ThemedText
-                      style={[
-                        styles.qtyButtonText,
-                        { color: white },
-                      ]}
+                      style={[styles.qtyButtonText, { color: white }]}
                     >
                       ←
                     </ThemedText>
@@ -254,10 +266,7 @@ export function ProductDetail({ productId, onClose }: Props) {
                     onPress={increase}
                   >
                     <ThemedText
-                      style={[
-                        styles.qtyButtonText,
-                        { color: white },
-                      ]}
+                      style={[styles.qtyButtonText, { color: white }]}
                     >
                       →
                     </ThemedText>
@@ -269,7 +278,7 @@ export function ProductDetail({ productId, onClose }: Props) {
                     styles.buyButton,
                     { backgroundColor: tabIconDefault },
                   ]}
-                  onPress={() => setConfirmOpen(true)} // ✅ ABRE MODAL
+                  onPress={() => setModalFlow('confirm')}
                 >
                   <ThemedText
                     style={[
@@ -291,17 +300,28 @@ export function ProductDetail({ productId, onClose }: Props) {
         />
       </View>
 
-      {/* ✅ CONFIRM MODAL */}
+      {/* CONFIRM MODAL */}
       <ConfirmModal
-        visible={confirmOpen}
+        visible={modalFlow === 'confirm'}
         title="Agregar al carrito"
         description={`¿Querés agregar ${quantity} unidad(es) de este producto?`}
         confirmText="Confirmar"
         cancelText="Cancelar"
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={closeFlow}
         onConfirm={handleBuy}
       />
 
+      {/* AFTER BUY MODAL */}
+      <AfterBuyModal
+        visible={modalFlow === 'afterBuy'}
+        onClose={closeFlow}
+        onGoToCart={() => {
+          setModalFlow('none');
+          router.push('/cart');
+        }}
+      />
+
+      {/* IMAGE ZOOM */}
       <ImageZoomModal
         visible={imageOpen}
         image={image}
@@ -348,6 +368,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 12,
     marginBottom: 12,
+  },
+
+  heartIcon: {
+    width: 32,
+    height: 32,
   },
 
   label: {

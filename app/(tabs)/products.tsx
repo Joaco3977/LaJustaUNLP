@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import {
+  Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -8,12 +10,13 @@ import {
 import { AnimatedButton } from '@/components/animated-button';
 import { CategoryGrid } from '@/components/grids/category-grid';
 import { ProductGrid } from '@/components/grids/product-grid';
+import { CustomModal } from '@/components/modals/custom-modal';
 import { ProductDetail } from '@/components/product-detail';
 import { SearchBar } from '@/components/search-bar';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { CustomModal } from '@/components/ui/custom-modal';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
+import { useRouter } from 'expo-router';
 
 import {
   Category,
@@ -24,12 +27,17 @@ import { useProducts } from '@/hooks/use-products';
 import { useSearchBar } from '@/hooks/use-search-bar';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
+
 const PAGE_SIZE = 12;
 
 export default function ProductsScreen() {
   const { rootCategories, getChildren } = useCategories();
 
   const backgroundColor = useThemeColor({}, 'background');
+  const laJustaColor = useThemeColor({}, 'tabIconDefault');
+  const buttonTextColor = useThemeColor({}, 'buttonText');
+
+  const heartFilled = require('@/assets/images/icons/si-favorito.png');
 
   const [categoryStack, setCategoryStack] = useState<Category[]>([]);
   const currentCategory = categoryStack.at(-1) ?? null;
@@ -39,6 +47,8 @@ export default function ProductsScreen() {
     useState<number | null>(null);
 
   const [page, setPage] = useState(0);
+
+  const router = useRouter();
 
   const {
     searchText,
@@ -53,6 +63,8 @@ export default function ProductsScreen() {
   });
 
   const isSearching = searchText.trim().length > 0;
+
+  
 
   const { products, loading, hasMore } = useProducts({
     page,
@@ -137,23 +149,48 @@ export default function ProductsScreen() {
           )}
 
           {isRoot && !isSearching && (
-            <CategoryGrid
-              categories={rootCategories}
-              onPress={handleSelectCategory}
-            />
+            <View>
+              <CategoryGrid
+                categories={rootCategories}
+                onPress={handleSelectCategory}
+              />
+
+              <Pressable
+                onPress={() => router.push('/favorites')}
+                style={[styles.favoritesButton, { backgroundColor: laJustaColor }]}
+              >
+                <ThemedText style={[styles.favoritesText, { color: buttonTextColor }]}>
+                  Mis favoritos
+                </ThemedText>
+                <Image
+                  source={heartFilled}
+                  style={styles.favoritesIcon}
+                />
+              </Pressable>
+            </View>
           )}
 
           {showTitle && (
-            <ThemedText style={styles.title}>
+            <ThemedText type="title" style={styles.title}>
               {titleText}
             </ThemedText>
           )}
 
           {!isSearching && subcategories.length > 0 && (
-            <CategoryGrid
-              categories={subcategories}
-              onPress={handleSelectCategory}
-            />
+            <>
+              <CategoryGrid
+                categories={subcategories}
+                onPress={handleSelectCategory}
+              />
+
+              {/* Línea divisora */}
+              <View
+                style={[
+                  styles.divider,
+                  { backgroundColor: laJustaColor },
+                ]}
+              />
+            </>
           )}
 
           {showProducts &&
@@ -172,7 +209,7 @@ export default function ProductsScreen() {
             !loading &&
             !searching &&
             visibleProducts.length === 0 && (
-              <ThemedText style={styles.empty}>
+              <ThemedText type="subtitle" style={styles.empty}>
                 No se encontraron productos
               </ThemedText>
             )}
@@ -261,6 +298,27 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 
+  favoritesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+  },
+
+  favoritesIcon: {
+    width: 28,
+    height: 28,
+    resizeMode: 'contain',
+  },
+
+  favoritesText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
   pageText: {
     fontSize: 14,
   },
@@ -271,4 +329,12 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     textAlign: 'center',
   },
+
+  divider: {
+    height: 2,
+    width: '100%',
+    marginVertical: 16,
+    opacity: 0.6,
+  },
+
 });

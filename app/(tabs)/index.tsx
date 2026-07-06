@@ -4,10 +4,10 @@ import { ScrollView, StyleSheet, View, useColorScheme } from 'react-native';
 
 import { AnimatedButton } from '@/components/animated-button';
 import { ProductGrid } from '@/components/grids/product-grid';
+import { CustomModal } from '@/components/modals/custom-modal';
 import { ProductDetail } from '@/components/product-detail';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { CustomModal } from '@/components/ui/custom-modal';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 
 import { HomeBanner } from '@/components/home-banner';
