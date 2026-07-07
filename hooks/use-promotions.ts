@@ -1,42 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useAsync } from '@/hooks/use-async';
+import { getPromotions } from '@/services/products.service';
 
 export function usePromotions() {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchPromotions = async () => {
-      setLoading(true);
-
-      try {
-        const url = new URL('https://www.lajustaunlp.com.ar/api/product');
-
-        url.searchParams.set(
-          'properties',
-          JSON.stringify([
-            { key: 'isPromotion', value: true },
-            { key: 'deletedAt', value: 'null' },
-          ])
-        );
-
-        url.searchParams.set('sort', 'id,ASC');
-
-        const res = await fetch(url.toString());
-        const json = await res.json();
-
-        setProducts(json.page ?? []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPromotions();
-  }, []);
+  const { data, loading } = useAsync(getPromotions, []);
 
   return {
-    products,
+    products: data?.page ?? [],
     loading,
   };
 }
