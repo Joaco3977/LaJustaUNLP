@@ -1,65 +1,27 @@
+import { getProducers } from '@/services/producers.service';
+import type { Producer } from '@/types';
 import { useEffect, useState } from 'react';
 
-/* ===== TYPES ===== */
-export type ProducerTag = {
-  id: number;
-  description: string;
-};
+export type { Producer, ProducerImage, ProducerTag } from '@/types';
 
-export type ProducerImage = {
-  id: number;
-  value: string;
-};
-
-export type Producer = {
-  id: number;
-  name: string;
-  origin?: string | null;
-  description?: string | null;
-  phone?: string | null;
-  images?: ProducerImage[] | null;
-  tags?: ProducerTag[] | null;
-  isCompany?: boolean;
-};
-
-/* ===== API ===== */
-const PRODUCER_BASE = 'https://www.lajustaunlp.com.ar/api/producer';
-
-// Al buscar traemos "todos" para filtrar en el teléfono (hay ~102).
-// Si algún día hay más, conviene pasar a búsqueda en el servidor (ver backlog).
 const SEARCH_FETCH_SIZE = 300;
 
-// Arma la URL de productores para una página dada.
-// range = "numeroDePagina,tamaño" (la página es 0-based). Página 0 -> "0,10", página 1 -> "1,10", etc.
-export const buildProducersUrl = (page: number, pageSize: number) => {
-  const properties = encodeURIComponent(
-    JSON.stringify([{ key: 'deletedAt', value: 'null' }])
-  );
-
-  return `${PRODUCER_BASE}?properties=${properties}&range=${page},${pageSize}&sort=id,ASC`;
-};
-
-/* ===== HOOK ===== */
 export function useProducers(page: number, pageSize: number, search = '') {
-  // Normalizo el término: sin espacios, en minúsculas y sin el "#" inicial.
   const term = search.trim().toLowerCase().replace(/^#/, '');
   const isSearch = term.length > 0;
 
-  // Datos crudos según el modo.
-  const [serverItems, setServerItems] = useState<Producer[]>([]); // modo lista: la página del servidor
+  const [serverItems, setServerItems] = useState<Producer[]>([]);
   const [serverTotal, setServerTotal] = useState(0);
-  const [searchAll, setSearchAll] = useState<Producer[]>([]); // modo búsqueda: todos los filtrados
+  const [searchAll, setSearchAll] = useState<Producer[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
-  // Permite reintentar tras un error.
   const [reloadKey, setReloadKey] = useState(0);
   const refetch = () => setReloadKey((k) => k + 1);
 
-  // ===== MODO LISTA: pide al servidor solo la página actual =====
   useEffect(() => {
-    if (isSearch) return; // en búsqueda se encarga el otro efecto
+    if (isSearch) return;
 
     let active = true;
 
@@ -68,10 +30,7 @@ export function useProducers(page: number, pageSize: number, search = '') {
       setError(false);
 
       try {
-        const res = await fetch(buildProducersUrl(page, pageSize));
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const json = await res.json();
+        const json = await getProducers({ page, size: pageSize });
         if (!active) return;
 
         setServerItems(json.page ?? []);
@@ -91,8 +50,6 @@ export function useProducers(page: number, pageSize: number, search = '') {
     };
   }, [isSearch, page, pageSize, reloadKey]);
 
-  // ===== MODO BÚSQUEDA: trae "todos" UNA vez por término y filtra =====
-  // OJO: no depende de `page`, así cambiar de página NO vuelve a pedir datos.
   useEffect(() => {
     if (!isSearch) return;
 
@@ -103,15 +60,11 @@ export function useProducers(page: number, pageSize: number, search = '') {
       setError(false);
 
       try {
-        const res = await fetch(buildProducersUrl(0, SEARCH_FETCH_SIZE));
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const json = await res.json();
+        const json = await getProducers({ page: 0, size: SEARCH_FETCH_SIZE });
         if (!active) return;
 
         const list: Producer[] = json.page ?? [];
 
-        // Filtra por nombre O por alguna etiqueta que contenga el término.
         const filtered = list.filter((p) => {
           const inName = p.name?.toLowerCase().includes(term);
           const inTags = p.tags?.some((t) =>
@@ -136,8 +89,6 @@ export function useProducers(page: number, pageSize: number, search = '') {
     };
   }, [isSearch, term, reloadKey]);
 
-  // ===== Qué mostrar =====
-  // En búsqueda, la paginación se hace acá cortando la lista filtrada (en memoria).
   let producers: Producer[];
   let total: number;
 

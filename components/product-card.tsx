@@ -9,29 +9,11 @@ import {
 } from 'react-native';
 
 import { Colors } from '@/constants/theme';
+import type { Product, ProductImage } from '@/types';
+
+export type { Product } from '@/types';
 
 const noImage = require('@/assets/images/no-image.png');
-
-type ProductImage = {
-  value: string;
-};
-
-type Unit = {
-  code?: string;
-  description?: string;
-};
-
-export type Product = {
-  id: number;
-  title: string;
-  price: number;
-  brand?: string;
-  unitQuantity?: number;
-  unitDescription?: string;
-  unit?: Unit;
-  images?: ProductImage[];
-  stock?: number;
-};
 
 type Props = {
   product: Product;
