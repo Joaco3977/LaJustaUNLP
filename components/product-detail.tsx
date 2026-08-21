@@ -5,8 +5,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ImageZoomModal } from '@/components/ui/image-zoom-modal';
 import { ScrollFadeOverlay } from '@/components/ui/scroll-fade-overlay';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { getProductById } from '@/services/products.service';
 import { useCartStore } from '@/stores/cart.store';
 import { useFavoritesStore } from '@/stores/favorites.store';
+import type { Product } from '@/types';
 import { useRouter } from 'expo-router';
 
 import { useEffect, useState } from 'react';
@@ -25,24 +27,6 @@ const noImage = require('@/assets/images/no-image.png');
 type Props = {
   productId: number;
   onClose: () => void;
-};
-
-type Product = {
-  id: number;
-  title: string;
-  price: number;
-  description?: string;
-  brand?: string;
-  stock?: number;
-  unit?: {
-    code?: string;
-    description?: string;
-  };
-  unitQuantity?: number;
-  unitDescription?: string;
-  images?: { value: string }[];
-  producer?: { name?: string };
-  categories?: { id: number; name: string }[];
 };
 
 type ModalFlow = 'none' | 'confirm' | 'afterBuy';
@@ -66,8 +50,7 @@ export function ProductDetail({ productId, onClose }: Props) {
   const white = useThemeColor({}, 'buttonText');
 
   useEffect(() => {
-    fetch(`https://www.lajustaunlp.com.ar/api/product/${productId}`)
-      .then((res) => res.json())
+    getProductById(productId)
       .then(setProduct)
       .catch(console.error);
   }, [productId]);

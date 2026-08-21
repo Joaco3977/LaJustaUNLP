@@ -1,4 +1,5 @@
-// hooks/use-search-bar.ts
+import { searchProducts } from '@/services/products.service';
+import type { Product } from '@/types';
 import { useCallback, useEffect, useState } from 'react';
 
 type UseSearchBarOptions = {
@@ -10,7 +11,7 @@ export function useSearchBar(options?: UseSearchBarOptions) {
   const { initialPage = 0, pageSize = 12 } = options ?? {};
 
   const [searchText, setSearchText] = useState('');
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(initialPage);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
@@ -18,7 +19,6 @@ export function useSearchBar(options?: UseSearchBarOptions) {
   const fetchSearch = useCallback(async () => {
     const query = searchText.trim();
 
-    // Si no hay texto de búsqueda, reseteamos estado
     if (!query) {
       setProducts([]);
       setHasMore(false);
@@ -28,33 +28,13 @@ export function useSearchBar(options?: UseSearchBarOptions) {
     setLoading(true);
 
     try {
-      const url = new URL('https://lajustaunlp.com.ar/api/product');
-
-      // Texto de búsqueda (API real)
-      url.searchParams.set('filter', `"${query}"`);
-
-      // Filtro fijo
-      url.searchParams.set(
-        'properties',
-        JSON.stringify([{ key: 'deletedAt', value: 'null' }])
-      );
-
-      // Paginación REAL: page, size
-      url.searchParams.set('range', `${page},${pageSize}`);
-
-      // Orden
-      url.searchParams.set('sort', 'id,ASC');
-
-      const res = await fetch(url.toString());
-      const json = await res.json();
-
+      const json = await searchProducts({ query, page, size: pageSize });
       const newProducts = json.page ?? [];
 
       setProducts((prev) =>
         page === initialPage ? newProducts : [...prev, ...newProducts]
       );
 
-      // Si devuelve menos de pageSize, no hay más páginas
       setHasMore(newProducts.length === pageSize);
     } catch (error) {
       console.error(error);
@@ -90,14 +70,11 @@ export function useSearchBar(options?: UseSearchBarOptions) {
   };
 
   return {
-    // state
     searchText,
     products,
     loading,
     page,
     hasMore,
-
-    // actions
     setSearchText,
     submitSearch,
     clearSearch,
