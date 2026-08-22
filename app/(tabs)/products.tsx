@@ -154,19 +154,6 @@ export default function ProductsScreen() {
                 categories={rootCategories}
                 onPress={handleSelectCategory}
               />
-
-              <Pressable
-                onPress={() => router.push('/favorites')}
-                style={[styles.favoritesButton, { backgroundColor: laJustaColor }]}
-              >
-                <ThemedText style={[styles.favoritesText, { color: buttonTextColor }]}>
-                  Mis favoritos
-                </ThemedText>
-                <Image
-                  source={heartFilled}
-                  style={styles.favoritesIcon}
-                />
-              </Pressable>
             </View>
           )}
 

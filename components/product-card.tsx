@@ -7,8 +7,10 @@ import {
   View,
   useColorScheme,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
 import { Colors } from '@/constants/theme';
+import { useCartStore } from '@/stores/cart.store';
 import type { Product, ProductImage } from '@/types';
 
 export type { Product } from '@/types';
@@ -38,7 +40,40 @@ export function ProductCard({ product, width, onPress }: Props) {
   const theme = Colors[colorScheme ?? 'light'];
 
   const unitInfo = formatUnitInfo(product);
-  const outOfStock = (product.stock ?? 0) === 0;
+
+  const stock = product.stock ?? 0;
+  const outOfStock = stock === 0;
+
+  const quantity = useCartStore(state =>
+    state.getItemQuantity(product.id)
+  );
+
+  const addToCart = useCartStore(state => state.addToCart);
+  const increaseQuantity = useCartStore(state => state.increaseQuantity);
+  const decreaseQuantity = useCartStore(state => state.decreaseQuantity);
+  const removeFromCart = useCartStore(state => state.removeFromCart);
+
+  const handleAddToCart = () => {
+    if (stock <= 0) return;
+
+    addToCart(product.id, 1);
+  };
+
+  const handleIncrease = () => {
+    if (quantity >= stock) return;
+
+    increaseQuantity(product.id);
+  };
+
+  const handleDecrease = () => {
+    if (quantity <= 1) return;
+
+    decreaseQuantity(product.id);
+  };
+
+  const handleRemove = () => {
+    removeFromCart(product.id);
+  };
 
   return (
     <Pressable
@@ -107,7 +142,8 @@ export function ProductCard({ product, width, onPress }: Props) {
           ]}
         >
           {!!unitInfo && (
-            <ThemedText type="unitDescriptionText"
+            <ThemedText
+              type="unitDescriptionText"
               numberOfLines={1}
               color="unitDescriptionText"
             >
@@ -130,6 +166,80 @@ export function ProductCard({ product, width, onPress }: Props) {
           </ThemedText>
         </View>
       </View>
+
+      {/* Acciones del carrito */}
+      {!outOfStock && (
+        <View
+          style={[
+            styles.cartActions,
+            { backgroundColor: theme.card },
+          ]}
+        >
+          {quantity === 0 ? (
+            <Pressable
+              onPress={handleAddToCart}
+              style={styles.addToCartButton}
+              hitSlop={4}
+            >
+              <MaterialIcons
+                name="shopping-cart"
+                size={20}
+                color="#555"
+              />
+            </Pressable>
+          ) : (
+            <View style={styles.quantityControls}>
+              <Pressable
+                onPress={handleDecrease}
+                style={styles.quantityButton}
+                hitSlop={4}
+              >
+                <MaterialIcons
+                  name="arrow-back"
+                  size={18}
+                  color="#555"
+                />
+              </Pressable>
+
+              <ThemedText
+                type="defaultSemiBold"
+                color="text"
+                style={styles.quantityText}
+              >
+                {quantity}
+              </ThemedText>
+
+              <Pressable
+                onPress={handleIncrease}
+                style={[
+                  styles.quantityButton,
+                  quantity >= stock && styles.disabledButton,
+                ]}
+                disabled={quantity >= stock}
+                hitSlop={4}
+              >
+                <MaterialIcons
+                  name="arrow-forward"
+                  size={18}
+                  color={quantity >= stock ? '#aaa' : '#555'}
+                />
+              </Pressable>
+
+              <Pressable
+                onPress={handleRemove}
+                style={styles.quantityButton}
+                hitSlop={4}
+              >
+                <MaterialIcons
+                  name="delete-outline"
+                  size={19}
+                  color="#777"
+                />
+              </Pressable>
+            </View>
+          )}
+        </View>
+      )}
     </Pressable>
   );
 }
@@ -171,6 +281,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 4,
+  },
+
+  cartActions: {
+    height: 42,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#ddd',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  addToCartButton: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#e0e0e0',
+  },
+
+  quantityControls: {
+    width: '100%',
+    height: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+  },
+
+  quantityButton: {
+    width: 34,
+    height: 34,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  disabledButton: {
+    opacity: 0.5,
+  },
+
+  quantityText: {
+    minWidth: 24,
+    textAlign: 'center',
   },
 
   outOfStockRibbon: {

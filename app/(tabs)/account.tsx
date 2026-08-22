@@ -18,17 +18,11 @@ export default function AccountScreen() {
 
       {/* Opciones */}
       <ThemedView style={styles.menu}>
-        <AnimatedButton
-          title="Mis datos personales"
-          onPress={() => router.push('/account/personal-data')}
-          icon={{ type: 'material', name: 'person' }}
-          style={styles.fullWidthButton}
-        />
 
         <AnimatedButton
-          title="Cambiar contraseña"
-          onPress={() => router.push('/account/change-password')}
-          icon={{ type: 'material', name: 'lock' }}
+          title="Mis favoritos"
+          onPress={() => router.push('/favorites')}
+          icon={{ type: 'material', name: 'favorite' }}
           style={styles.fullWidthButton}
         />
 
@@ -47,6 +41,20 @@ export default function AccountScreen() {
         />
 
         <AnimatedButton
+          title="Mis datos personales"
+          onPress={() => router.push('/account/personal-data')}
+          icon={{ type: 'material', name: 'person' }}
+          style={styles.fullWidthButton}
+        />
+
+        <AnimatedButton
+          title="Cambiar contraseña"
+          onPress={() => router.push('/account/change-password')}
+          icon={{ type: 'material', name: 'lock' }}
+          style={styles.fullWidthButton}
+        />
+
+        <AnimatedButton
           title="Ayuda"
           onPress={() => router.push('/account/help')}
           icon={{ type: 'material', name: 'help-outline' }}
@@ -59,7 +67,9 @@ export default function AccountScreen() {
           icon={{ type: 'material', name: 'logout' }}
           style={styles.fullWidthButton}
         />
+        
       </ThemedView>
+
     </ThemedView>
   );
 }
