@@ -12,3 +12,7 @@ export function getProducers(params: { page?: number; size?: number } = {}) {
     sort: 'id,ASC',
   });
 }
+
+export function getProducerById(id: number) {
+  return apiGet<Producer>(`${PATH}/${id}`);
+}

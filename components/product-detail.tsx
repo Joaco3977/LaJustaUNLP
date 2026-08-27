@@ -65,6 +65,7 @@ export function ProductDetail({ productId, onClose }: Props) {
       : noImage;
 
   const favorite = isFavorite(product.id);
+  const producerId = product.producer?.id;
 
   const increase = () =>
     setQuantity((q) => Math.min(q + 1, stock));
@@ -167,9 +168,27 @@ export function ProductDetail({ productId, onClose }: Props) {
 
           {!!product.producer?.name && (
             <Section title="Productor">
-              <ThemedText style={[styles.value, { color: text }]}>
-                {product.producer.name}
-              </ThemedText>
+              {producerId != null ? (
+                <Pressable
+                  onPress={() => {
+                    onClose();
+                    router.push({
+                      pathname: '/producer/[id]',
+                      params: { id: String(producerId) },
+                    });
+                  }}
+                >
+                  <ThemedText
+                    style={[styles.value, styles.link, { color: tabIconDefault }]}
+                  >
+                    {product.producer.name}  ›
+                  </ThemedText>
+                </Pressable>
+              ) : (
+                <ThemedText style={[styles.value, { color: text }]}>
+                  {product.producer.name}
+                </ThemedText>
+              )}
             </Section>
           )}
 
@@ -365,6 +384,7 @@ const styles = StyleSheet.create({
   },
 
   value: { fontSize: 14, lineHeight: 20 },
+  link: { fontWeight: '700' },
 
   buyContainer: {
     marginTop: 18,

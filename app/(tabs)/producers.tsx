@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
@@ -11,6 +12,7 @@ import { useProducers } from '@/hooks/use-producers';
 const PAGE_SIZE = 10;
 
 export default function ProducersScreen() {
+  const router = useRouter();
   const [page, setPage] = useState(0);
 
   // searchText = lo que se escribe; searchQuery = lo que realmente se busca (al enviar).
@@ -89,7 +91,16 @@ export default function ProducersScreen() {
           </ThemedText>
         ) : (
           producers.map((producer) => (
-            <ProducerCard key={producer.id} producer={producer} />
+            <ProducerCard
+              key={producer.id}
+              producer={producer}
+              onPress={() =>
+                router.push({
+                  pathname: '/producer/[id]',
+                  params: { id: String(producer.id) },
+                })
+              }
+            />
           ))
         )}
 
