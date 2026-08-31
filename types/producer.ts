@@ -1,3 +1,5 @@
+import type { Product } from './product';
+
 export type ProducerTag = {
   id: number;
   description: string;
@@ -17,4 +19,5 @@ export type Producer = {
   images?: ProducerImage[] | null;
   tags?: ProducerTag[] | null;
   isCompany?: boolean;
+  products?: Product[] | null;
 };
