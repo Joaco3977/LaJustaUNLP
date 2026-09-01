@@ -78,7 +78,7 @@ export function ProductDetail({ productId, onClose }: Props) {
   const handleBuy = () => {
     if (!product) return;
 
-    addToCart(product.id, quantity);
+    addToCart(productId, stock, quantity);
 
     setModalFlow('afterBuy');
   };

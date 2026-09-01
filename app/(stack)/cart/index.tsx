@@ -5,32 +5,27 @@ import {
   Pressable,
   StyleSheet,
   View,
+  useWindowDimensions,
 } from 'react-native';
 
 import { Product, ProductCard } from '@/components/product-card';
+import { ProductDetail } from '@/components/product-detail';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+
+import { CustomModal } from '@/components/modals/custom-modal';
+
 import { useProducts } from '@/hooks/use-products';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useCartStore } from '@/stores/cart.store';
 
-import { CustomModal } from '@/components/modals/custom-modal';
-import { ProductDetail } from '@/components/product-detail';
-
-const CARD_WIDTH = 140;
-
-type CartProduct = Product & {
-  cartQuantity: number;
-};
+const GRID_GAP = 12;
+const HORIZONTAL_PADDING = 16;
 
 export default function CartScreen() {
   const {
     cart,
     loadCart,
-    increaseQuantity,
-    decreaseQuantity,
-    removeFromCart,
   } = useCartStore();
 
   const [selectedProductId, setSelectedProductId] =
@@ -40,53 +35,80 @@ export default function CartScreen() {
   const background = useThemeColor({}, 'background');
   const button = useThemeColor({}, 'tabIconDefault');
   const white = useThemeColor({}, 'buttonText');
-  const cardBg = useThemeColor({}, 'card');
 
   const router = useRouter();
+
+  const { width } = useWindowDimensions();
 
   useEffect(() => {
     loadCart();
   }, []);
 
-  const productIds = useMemo(() => {
-    return cart.map(item => item.productId);
-  }, [cart.map(item => item.productId).join(',')]);
+  /*
+   * IDs de productos actualmente presentes en el carrito.
+   */
+  const productIds = useMemo(
+    () => cart.map(item => item.productId),
+    [cart]
+  );
 
   const productsOptions = useMemo(
     () => ({ ids: productIds }),
     [productIds]
   );
 
-  /* Fetch centralizado */
+  /*
+   * Traemos los productos actualizados.
+   * El stock y el precio vienen de la fuente actual.
+   */
   const { products, loading } = useProducts(productsOptions);
 
-  /* Merge producto + cantidad */
-  const productsWithQuantity: CartProduct[] = useMemo(() => {
-    return products.map(product => {
-      const cartItem = cart.find(c => c.productId === product.id);
+  /*
+   * Total del carrito.
+   */
+  const total = useMemo(() => {
+    return products.reduce((acc, product) => {
+      const cartItem = cart.find(
+        item => item.productId === product.id
+      );
 
-      return {
-        ...product,
-        cartQuantity: cartItem?.quantity ?? 0,
-      };
-    });
+      if (!cartItem) return acc;
+
+      const stock = product.stock ?? 0;
+
+      if (stock === 0) return acc;
+
+      return acc + product.price * cartItem.quantity;
+    }, 0);
   }, [products, cart]);
 
-  const total = useMemo(() => {
-    return productsWithQuantity.reduce((acc, p) => {
-      if ((p.stock ?? 0) === 0) return acc;
-      return acc + p.price * p.cartQuantity;
-    }, 0);
-  }, [productsWithQuantity]);
+  /*
+   * PRODUCT DETAIL
+   */
+  const openProduct = (id: number) => {
+    setSelectedProductId(id);
+  };
 
-  const openProduct = (id: number) => setSelectedProductId(id);
-  const closeProduct = () => setSelectedProductId(null);
+  const closeProduct = () => {
+    setSelectedProductId(null);
+  };
+
+  /*
+   * Ancho de cada card para 2 columnas.
+   */
+  const cardWidth =
+    (width - HORIZONTAL_PADDING * 2 - GRID_GAP) / 2;
 
   return (
     <>
       <Stack.Screen options={{ title: 'Carrito' }} />
 
-      <ThemedView style={[styles.container, { backgroundColor: background }]}>
+      <ThemedView
+        style={[
+          styles.container,
+          { backgroundColor: background },
+        ]}
+      >
         {cart.length === 0 ? (
           <View style={styles.emptyContainer}>
             <ThemedText type="title">
@@ -117,113 +139,24 @@ export default function CartScreen() {
           </View>
         ) : loading && products.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <ThemedText>Cargando productos...</ThemedText>
+            <ThemedText>
+              Cargando productos...
+            </ThemedText>
           </View>
         ) : (
           <FlatList
-            data={productsWithQuantity}
-            keyExtractor={(item) => item.id.toString()}
+            data={products}
+            numColumns={2}
+            keyExtractor={item => item.id.toString()}
             contentContainerStyle={styles.list}
-            renderItem={({ item }) => {
-              const stock = item.stock ?? 0;
-              const disabled = stock === 0;
-
-              return (
-                <View
-                  style={[
-                    styles.cartItemCard,
-                    { backgroundColor: cardBg },
-                    disabled && styles.disabledRow,
-                  ]}
-                >
-                  {/* BOTÓN ELIMINAR */}
-                  <Pressable
-                    style={styles.trashButton}
-                    onPress={() => removeFromCart(item.id)}
-                  >
-                    <IconSymbol
-                      name="trash.fill"
-                      size={16}
-                      color="#fff"
-                    />
-                  </Pressable>
-
-                  <View style={styles.row}>
-                    <ProductCard
-                      product={item}
-                      width={CARD_WIDTH}
-                      onPress={() => openProduct(item.id)}
-                    />
-
-                    <View style={styles.quantityBox}>
-                      <ThemedText
-                        style={{
-                          color: button,
-                          fontSize: 20,
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        Cantidad
-                      </ThemedText>
-
-                      <ThemedText
-                        style={{
-                          color: button,
-                          fontSize: 20,
-                          fontWeight: 'bold',
-                        }}
-                      >
-                        {item.cartQuantity}
-                      </ThemedText>
-
-                      <View style={styles.qtyControls}>
-                        <Pressable
-                          disabled={disabled || item.cartQuantity <= 1}
-                          onPress={() => decreaseQuantity(item.id)}
-                          style={[
-                            styles.qtyButton,
-                            { backgroundColor: button },
-                            disabled && styles.disabledButton,
-                          ]}
-                        >
-                          <ThemedText
-                            style={{
-                              color: white,
-                              fontSize: 16,
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            -
-                          </ThemedText>
-                        </Pressable>
-
-                        <Pressable
-                          disabled={
-                            disabled || item.cartQuantity >= stock
-                          }
-                          onPress={() => increaseQuantity(item.id)}
-                          style={[
-                            styles.qtyButton,
-                            { backgroundColor: button },
-                            disabled && styles.disabledButton,
-                          ]}
-                        >
-                          <ThemedText
-                            style={{
-                              color: white,
-                              fontSize: 16,
-                              fontWeight: 'bold',
-                            }}
-                          >
-                            +
-                          </ThemedText>
-                        </Pressable>
-                      </View>
-                    </View>
-                  </View>
-                </View>
-              );
-            }}
+            columnWrapperStyle={styles.row}
+            renderItem={({ item }) => (
+              <ProductCard
+                product={item}
+                width={cardWidth}
+                onPress={openProduct}
+              />
+            )}
           />
         )}
       </ThemedView>
@@ -243,8 +176,16 @@ export default function CartScreen() {
 
       {/* FOOTER */}
       {cart.length > 0 && selectedProductId === null && (
-        <View style={[styles.footer, { backgroundColor: tab }]}>
-          <ThemedText style={styles.total} type="title">
+        <View
+          style={[
+            styles.footer,
+            { backgroundColor: tab },
+          ]}
+        >
+          <ThemedText
+            style={styles.total}
+            type="title"
+          >
             Total: ${total}
           </ThemedText>
 
@@ -253,7 +194,9 @@ export default function CartScreen() {
               styles.continueButton,
               { backgroundColor: button },
             ]}
-            onPress={() => console.log('TOTAL:', total)}
+            onPress={() =>
+              router.push('/cart/confirm-products')
+            }
           >
             <ThemedText
               style={{
@@ -277,36 +220,20 @@ const styles = StyleSheet.create({
   },
 
   list: {
-    padding: 16,
+    padding: HORIZONTAL_PADDING,
     paddingBottom: 120,
-    gap: 16,
-  },
-
-  cartItemCard: {
-    borderRadius: 16,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
+    gap: GRID_GAP,
   },
 
   row: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
+    gap: GRID_GAP,
   },
 
-  disabledRow: {
-    opacity: 0.4,
-  },
-
-  quantityBox: {
+  emptyContainer: {
     flex: 1,
-    padding: 12,
-    borderRadius: 12,
+    justifyContent: 'center',
     alignItems: 'center',
+    padding: 32,
     gap: 8,
   },
 
@@ -317,32 +244,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-
-  qtyControls: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-
-  qtyButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-
-  disabledButton: {
-    opacity: 0.4,
-  },
-
-  trashButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#ff6f43a6',
-    borderRadius: 16,
-    padding: 6,
-    zIndex: 20,
-    elevation: 4,
   },
 
   footer: {
@@ -367,13 +268,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 14,
-  },
-
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-    gap: 8,
   },
 });

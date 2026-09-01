@@ -6,113 +6,187 @@ export type CartItem = {
   quantity: number;
 };
 
-// Definicion de la interfaz del estado del carrito de compras
 type CartState = {
   cart: CartItem[];
 
   loadCart: () => Promise<void>;
 
-  addToCart: (productId: number, quantity?: number) => void;
+  addToCart: (
+    productId: number,
+    stock: number,
+    quantity?: number
+  ) => void;
+
   removeFromCart: (productId: number) => void;
-  increaseQuantity: (productId: number) => void;
+
+  increaseQuantity: (
+    productId: number,
+    stock: number
+  ) => void;
+
   decreaseQuantity: (productId: number) => void;
 
   getTotalItems: () => number;
   getItemQuantity: (productId: number) => number;
+
   clearCart: () => void;
 };
 
-// Nombre unico del almacenamiento para el carrito de compras
 const CART_STORAGE_KEY = 'cart';
 
-// Definicion del creador del estado del carrito de compras
 const cartStoreCreator: StateCreator<CartState> = (set, get) => ({
   cart: [],
 
   loadCart: async () => {
     try {
       const storedCart = await AsyncStorage.getItem(CART_STORAGE_KEY);
+
       if (storedCart) {
-        set({ cart: JSON.parse(storedCart) });
+        const parsedCart: CartItem[] = JSON.parse(storedCart);
+
+        // Evitamos cargar datos inválidos desde AsyncStorage.
+        const validCart = parsedCart.filter(
+          item =>
+            Number.isInteger(item.productId) &&
+            item.productId > 0 &&
+            Number.isInteger(item.quantity) &&
+            item.quantity > 0
+        );
+
+        set({ cart: validCart });
       }
     } catch (error) {
       console.warn('Error loading cart from storage', error);
     }
   },
 
-  addToCart: (productId: number, quantity = 1) => {
+  addToCart: (productId, stock, quantity = 1) => {
+    if (stock <= 0 || quantity <= 0) return;
+
     const { cart } = get();
+
     const existingItem = cart.find(
       item => item.productId === productId
     );
 
-    const updatedCart: CartItem[] = existingItem
-      ? cart.map(item =>
-          item.productId === productId
-            ? {
-                ...item,
-                quantity: item.quantity + quantity,
-              }
-            : item
-        )
-      : [...cart, { productId, quantity }];
+    let updatedCart: CartItem[];
+
+    if (existingItem) {
+      const newQuantity = Math.min(
+        existingItem.quantity + quantity,
+        stock
+      );
+
+      updatedCart = cart.map(item =>
+        item.productId === productId
+          ? {
+              ...item,
+              quantity: newQuantity,
+            }
+          : item
+      );
+    } else {
+      updatedCart = [
+        ...cart,
+        {
+          productId,
+          quantity: Math.min(quantity, stock),
+        },
+      ];
+    }
 
     set({ cart: updatedCart });
+
     AsyncStorage.setItem(
       CART_STORAGE_KEY,
       JSON.stringify(updatedCart)
     );
   },
 
-  increaseQuantity: (productId: number) => {
-    const updatedCart = get().cart.map(item =>
-      item.productId === productId
-        ? { ...item, quantity: item.quantity + 1 }
-        : item
+  increaseQuantity: (productId, stock) => {
+    if (stock <= 0) return;
+
+    const updatedCart = get().cart.map(item => {
+      if (item.productId !== productId) {
+        return item;
+      }
+
+      if (item.quantity >= stock) {
+        return item;
+      }
+
+      return {
+        ...item,
+        quantity: item.quantity + 1,
+      };
+    });
+
+    set({ cart: updatedCart });
+
+    AsyncStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(updatedCart)
     );
-
-    set({ cart: updatedCart });
-    AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(updatedCart));
   },
 
-  decreaseQuantity: (productId: number) => {
-    const updatedCart = get().cart
-      .map(item =>
-        item.productId === productId
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
-      .filter(item => item.quantity > 0);
+  decreaseQuantity: productId => {
+    const updatedCart = get().cart.map(item => {
+      if (item.productId !== productId) {
+        return item;
+      }
+
+      // Nunca baja de 1.
+      if (item.quantity <= 1) {
+        return item;
+      }
+
+      return {
+        ...item,
+        quantity: item.quantity - 1,
+      };
+    });
 
     set({ cart: updatedCart });
-    AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(updatedCart));
+
+    AsyncStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(updatedCart)
+    );
   },
 
-  removeFromCart: (productId: number) => {
+  removeFromCart: productId => {
     const updatedCart = get().cart.filter(
       item => item.productId !== productId
     );
 
     set({ cart: updatedCart });
-    AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(updatedCart));
-  },
-  
-  getTotalItems: () => {
-    return get().cart.reduce((total, item) => total + item.quantity, 0);
+
+    AsyncStorage.setItem(
+      CART_STORAGE_KEY,
+      JSON.stringify(updatedCart)
+    );
   },
 
-  getItemQuantity: (productId: number) => {
+  getTotalItems: () => {
+    return get().cart.reduce(
+      (total, item) => total + item.quantity,
+      0
+    );
+  },
+
+  getItemQuantity: productId => {
     const item = get().cart.find(
       item => item.productId === productId
     );
+
     return item ? item.quantity : 0;
   },
 
   clearCart: () => {
     set({ cart: [] });
+
     AsyncStorage.removeItem(CART_STORAGE_KEY);
   },
 });
 
-// Creacion del store del carrito de compras usando Zustand
 export const useCartStore = create<CartState>(cartStoreCreator);
