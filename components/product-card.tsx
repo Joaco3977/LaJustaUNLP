@@ -56,13 +56,13 @@ export function ProductCard({ product, width, onPress }: Props) {
   const handleAddToCart = () => {
     if (stock <= 0) return;
 
-    addToCart(product.id, 1);
+    addToCart(product.id, stock, 1);
   };
 
   const handleIncrease = () => {
     if (quantity >= stock) return;
 
-    increaseQuantity(product.id);
+    increaseQuantity(product.id, stock);
   };
 
   const handleDecrease = () => {
