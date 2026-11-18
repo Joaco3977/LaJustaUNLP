@@ -8,7 +8,9 @@ import {
   useColorScheme,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useState } from 'react';
 
+import { ConfirmModal } from '@/components/modals/confirm-modal';
 import { Colors } from '@/constants/theme';
 import { useCartStore } from '@/stores/cart.store';
 import type { Product, ProductImage } from '@/types';
@@ -71,11 +73,21 @@ export function ProductCard({ product, width, onPress }: Props) {
     decreaseQuantity(product.id);
   };
 
+  // Controla si se muestra el diálogo "Eliminar producto".
+  const [confirmRemoveVisible, setConfirmRemoveVisible] = useState(false);
+
+  // El tacho ya no elimina: solo abre la confirmación.
   const handleRemove = () => {
+    setConfirmRemoveVisible(true);
+  };
+
+  const confirmRemove = () => {
+    setConfirmRemoveVisible(false);
     removeFromCart(product.id);
   };
 
   return (
+    <>
     <Pressable
       onPress={() => onPress(product.id)}
       style={[
@@ -241,6 +253,20 @@ export function ProductCard({ product, width, onPress }: Props) {
         </View>
       )}
     </Pressable>
+
+    {/* Confirmación antes de quitar el producto del carrito.
+        Va FUERA del Pressable de la card para que un toque en el
+        diálogo no "suba" a la card y abra el detalle del producto. */}
+    <ConfirmModal
+      visible={confirmRemoveVisible}
+      title="Eliminar producto"
+      description="¿Estás seguro de que querés eliminar este producto del carrito?"
+      confirmText="Eliminar"
+      cancelText="Cancelar"
+      onCancel={() => setConfirmRemoveVisible(false)}
+      onConfirm={confirmRemove}
+    />
+    </>
   );
 }
 

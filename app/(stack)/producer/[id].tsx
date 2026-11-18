@@ -20,7 +20,7 @@ export default function ProducerDetailScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <Stack.Screen options={{ title: producer?.name ?? 'Productor' }} />
+      <Stack.Screen options={{ title: 'Detalle del productor' }} />
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {loading ? (
