@@ -4,6 +4,7 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import * as NavigationBar from 'expo-navigation-bar';
 
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
@@ -18,6 +19,8 @@ export default function RootLayout() {
 
   const [ready, setReady] = useState(false);
 
+  /* ---------------- INICIALIZACIÓN ---------------- */
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -30,6 +33,21 @@ export default function RootLayout() {
     };
 
     init();
+  }, []);
+
+  /* ---------------- BARRA DE NAVEGACIÓN ANDROID ---------------- */
+
+  useEffect(() => {
+    async function configureNavigationBar() {
+      try {
+        await NavigationBar.setVisibilityAsync('hidden');
+        await NavigationBar.setBehaviorAsync('overlay-swipe');
+      } catch (error) {
+        console.warn('Error configurando barra de navegación:', error);
+      }
+    }
+
+    configureNavigationBar();
   }, []);
 
   if (!ready) return null;
