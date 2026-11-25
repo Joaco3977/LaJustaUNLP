@@ -47,6 +47,12 @@ const MAPPING = {
   'questionmark.circle': 'help-outline', // Ayuda
   'rectangle.portrait.and.arrow.right': 'logout', // Cerrar sesión
 
+  /** Entrega y retiro */
+  'truck.box.fill': 'local-shipping',
+  'snowflake': 'ac-unit',
+  'phone.fill': 'phone',
+  'checkmark.circle.fill': 'check-circle',
+
   /** Otros */
   'gearshape.fill': 'settings',
   'trash.fill': 'delete',

@@ -11,6 +11,8 @@ import {
   View,
 } from 'react-native';
 
+import { IconSymbol } from '@/components/ui/icon-symbol';
+
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
@@ -43,14 +45,6 @@ export default function CartConfirmPickupNodeScreen() {
   const button = useThemeColor({}, 'tabIconDefault');
   const white = useThemeColor({}, 'buttonText');
 
-  /*
-   * Opción de entrega seleccionada.
-   *
-   * Puede ser:
-   * - Delivery
-   * - Un nodo de retiro
-   * - Ninguna
-   */
   const [selectedOption, setSelectedOption] =
     useState<SelectedOption>(null);
 
@@ -59,7 +53,7 @@ export default function CartConfirmPickupNodeScreen() {
   }, []);
 
   /*
-   * Productos del carrito.
+   * PRODUCTOS DEL CARRITO
    */
   const productIds = useMemo(
     () => cart.map(item => item.productId),
@@ -77,7 +71,7 @@ export default function CartConfirmPickupNodeScreen() {
   } = useProducts(productsOptions);
 
   /*
-   * ¿Algún producto necesita frío?
+   * ¿ALGÚN PRODUCTO NECESITA FRÍO?
    */
   const needsCold = useMemo(() => {
     return products.some(
@@ -86,7 +80,7 @@ export default function CartConfirmPickupNodeScreen() {
   }, [products]);
 
   /*
-   * Total de la compra.
+   * TOTAL DE LA COMPRA
    */
   const total = useMemo(() => {
     return products.reduce((acc, product) => {
@@ -98,28 +92,19 @@ export default function CartConfirmPickupNodeScreen() {
         return acc;
       }
 
-      return (
-        acc +
-        product.price * cartItem.quantity
-      );
+      return acc + product.price * cartItem.quantity;
     }, 0);
   }, [products, cart]);
 
   /*
-   * Nodos disponibles.
+   * NODOS DISPONIBLES
    */
   const availableNodes = useMemo(() => {
     return nodes.filter(node => {
-      /*
-       * Excluir nodos eliminados.
-       */
       if (node.deletedAt !== null) {
         return false;
       }
 
-      /*
-       * Excluir nodos internos/no seleccionables.
-       */
       const nodeName = node.name.toUpperCase();
 
       if (
@@ -129,10 +114,6 @@ export default function CartConfirmPickupNodeScreen() {
         return false;
       }
 
-      /*
-       * Si algún producto necesita frío,
-       * solamente nodos con heladera.
-       */
       if (
         needsCold &&
         node.hasFridge !== true
@@ -148,8 +129,8 @@ export default function CartConfirmPickupNodeScreen() {
     nodesLoading || productsLoading;
 
   /*
-   * Si el carrito quedó vacío,
-   * volvemos al carrito.
+   * SI EL CARRITO QUEDÓ VACÍO,
+   * VOLVEMOS AL CARRITO.
    */
   useEffect(() => {
     if (
@@ -164,24 +145,18 @@ export default function CartConfirmPickupNodeScreen() {
   ]);
 
   /*
-   * Continuar según la opción seleccionada.
+   * CONTINUAR SEGÚN LA OPCIÓN SELECCIONADA
    */
   const continuePurchase = () => {
     if (!selectedOption) {
       return;
     }
 
-    /*
-     * DELIVERY
-     */
     if (selectedOption.type === 'delivery') {
       router.push('/cart/confirm-delivery');
       return;
     }
 
-    /*
-     * NODO DE RETIRO
-     */
     router.push({
       pathname: '/cart/confirm-final',
       params: {
@@ -209,9 +184,7 @@ export default function CartConfirmPickupNodeScreen() {
           keyExtractor={item =>
             item.id.toString()
           }
-          contentContainerStyle={
-            styles.list
-          }
+          contentContainerStyle={styles.list}
 
           /*
            * HEADER
@@ -228,8 +201,7 @@ export default function CartConfirmPickupNodeScreen() {
                 <Pressable
                   style={[
                     styles.optionCard,
-                    selectedOption?.type ===
-                      'delivery' &&
+                    selectedOption?.type === 'delivery' &&
                       styles.selectedOptionCard,
                   ]}
                   onPress={() =>
@@ -238,78 +210,65 @@ export default function CartConfirmPickupNodeScreen() {
                     })
                   }
                 >
-                  <View
-                    style={
-                      styles.optionHeader
-                    }
-                  >
-                    <View
-                      style={
-                        styles.optionInfo
-                      }
-                    >
-                      <ThemedText
-                        style={
-                          styles.optionTitle
-                        }
-                      >
-                        🚚 Enviar a domicilio
-                      </ThemedText>
+                  <View style={styles.optionHeader}>
+                    <View style={styles.optionInfo}>
+                      <View style={styles.optionTitleContainer}>
+                        <IconSymbol
+                          name="truck.box.fill"
+                          size={24}
+                          color="#2E7D32"
+                        />
+
+                        <ThemedText style={styles.optionTitle}>
+                          Enviar a domicilio
+                        </ThemedText>
+                      </View>
 
                       <ThemedText>
-                        Recibí tu compra en tu
-                        domicilio
+                        Recibí tu compra en tu domicilio
                       </ThemedText>
                     </View>
 
-                    {selectedOption?.type ===
-                      'delivery' && (
-                      <ThemedText
-                        style={
-                          styles.selectedText
-                        }
-                      >
-                        ✓
-                      </ThemedText>
+                    {selectedOption?.type === 'delivery' && (
+                      <IconSymbol
+                        name="checkmark.circle.fill"
+                        size={24}
+                        color="#2E7D32"
+                      />
                     )}
                   </View>
                 </Pressable>
               </View>
 
               {/* SEPARADOR */}
-              <View
-                style={
-                  styles.sectionSeparator
-                }
-              />
+              <View style={styles.sectionSeparator} />
 
               {/* NODOS */}
-              <View
-                style={
-                  styles.nodesSection
-                }
-              >
+              <View style={styles.nodesSection}>
                 <ThemedText type="subtitle">
-                  ¿Preferís retirar tu pedido
-                  personalmente?
+                  ¿Preferís retirar tu pedido personalmente?
                 </ThemedText>
 
                 {needsCold && (
-                  <ThemedText
-                    style={
-                      styles.coldMessage
-                    }
-                  >
-                    ❄️ Tu compra contiene productos que necesitan
-                    frío. Solo se muestran nodos con heladera.
-                  </ThemedText>
+                  <View style={styles.coldMessageContainer}>
+                    <IconSymbol
+                      name="snowflake"
+                      size={20}
+                      color="#2196F3"
+                    />
+
+                    <ThemedText style={styles.coldMessage}>
+                      Tu compra contiene productos que necesitan
+                      frío. Solo se muestran nodos con heladera.
+                    </ThemedText>
+                  </View>
                 )}
               </View>
             </View>
           }
 
           /*
-           * Si no hay nodos.
+           * SI NO HAY NODOS
            */
           ListEmptyComponent={
             loading ? (
@@ -318,18 +277,12 @@ export default function CartConfirmPickupNodeScreen() {
                 style={styles.loader}
               />
             ) : nodesError ? (
-              <ThemedText
-                style={styles.error}
-              >
+              <ThemedText style={styles.error}>
                 {nodesError}
               </ThemedText>
             ) : (
-              <ThemedText
-                style={styles.error}
-              >
-                No hay nodos de retiro
-                disponibles para esta
-                compra.
+              <ThemedText style={styles.error}>
+                No hay nodos de retiro disponibles para esta compra.
               </ThemedText>
             )
           }
@@ -339,16 +292,14 @@ export default function CartConfirmPickupNodeScreen() {
            */
           renderItem={({ item }) => {
             const selected =
-              selectedOption?.type ===
-                'node' &&
+              selectedOption?.type === 'node' &&
               selectedOption.id === item.id;
 
             return (
               <Pressable
                 style={[
                   styles.nodeCard,
-                  selected &&
-                    styles.selectedNodeCard,
+                  selected && styles.selectedNodeCard,
                 ]}
                 onPress={() =>
                   setSelectedOption({
@@ -357,27 +308,17 @@ export default function CartConfirmPickupNodeScreen() {
                   })
                 }
               >
-                <View
-                  style={
-                    styles.nodeHeader
-                  }
-                >
-                  <ThemedText
-                    style={
-                      styles.nodeName
-                    }
-                  >
+                <View style={styles.nodeHeader}>
+                  <ThemedText style={styles.nodeName}>
                     {item.name}
                   </ThemedText>
 
                   {selected && (
-                    <ThemedText
-                      style={
-                        styles.selectedText
-                      }
-                    >
-                      ✓
-                    </ThemedText>
+                    <IconSymbol
+                      name="checkmark.circle.fill"
+                      size={24}
+                      color="#2E7D32"
+                    />
                   )}
                 </View>
 
@@ -386,27 +327,38 @@ export default function CartConfirmPickupNodeScreen() {
                   {item.address.number ?? ''}
                 </ThemedText>
 
-                {item.address
-                  .betweenStreets && (
+                {item.address.betweenStreets && (
                   <ThemedText>
-                    Entre{' '}
-                    {
-                      item.address
-                        .betweenStreets
-                    }
+                    Entre {item.address.betweenStreets}
                   </ThemedText>
                 )}
 
                 {item.phone && (
-                  <ThemedText>
-                    📞 {item.phone}
-                  </ThemedText>
+                  <View style={styles.infoRow}>
+                    <IconSymbol
+                      name="phone.fill"
+                      size={17}
+                      color="#666666"
+                    />
+
+                    <ThemedText>
+                      {item.phone}
+                    </ThemedText>
+                  </View>
                 )}
 
                 {item.hasFridge && (
-                  <ThemedText>
-                    ❄️ Tiene heladera
-                  </ThemedText>
+                  <View style={styles.infoRow}>
+                    <IconSymbol
+                      name="snowflake"
+                      size={18}
+                      color="#2196F3"
+                    />
+
+                    <ThemedText>
+                      Tiene heladera
+                    </ThemedText>
+                  </View>
                 )}
               </Pressable>
             );
@@ -432,10 +384,9 @@ export default function CartConfirmPickupNodeScreen() {
             style={[
               styles.confirmButton,
               {
-                backgroundColor:
-                  selectedOption
-                    ? button
-                    : '#9ca3af',
+                backgroundColor: selectedOption
+                  ? button
+                  : '#9ca3af',
               },
             ]}
             onPress={continuePurchase}
@@ -502,6 +453,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
 
+  optionTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
   optionTitle: {
     fontSize: 16,
     fontWeight: '700',
@@ -524,7 +481,14 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  coldMessageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
   coldMessage: {
+    flex: 1,
     marginTop: 4,
   },
 
@@ -561,9 +525,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  selectedText: {
-    fontSize: 22,
-    fontWeight: 'bold',
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 
   /*
