@@ -145,13 +145,7 @@ export default function DeliveryScreen() {
         },
       });
 
-      console.log('URL:', url);
-      console.log('HTTP Status:', response.status);
-      console.log('Headers:', response.headers);
-
       const responseText = await response.text();
-
-      console.log('Respuesta del servidor:', responseText);
 
       if (!response.ok) {
         throw new Error(
@@ -160,8 +154,6 @@ export default function DeliveryScreen() {
       }
 
       const data = JSON.parse(responseText);
-
-      console.log('Resultados Photon:', data.features);
 
       if (!data.features || data.features.length === 0) {
         Alert.alert(
