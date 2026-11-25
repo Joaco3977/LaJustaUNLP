@@ -8,15 +8,15 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
 
-export default function FinalScreen() {
+export default function PickupNodeScreen() {
 
   /* ---------------- UI ---------------- */
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Confirmar compra' }} />
+      <Stack.Screen options={{ title: 'Elegir nodo de retiro' }} />
         <ThemedText type="title">
-          Work in Progress
+          WIP Elegir nodo de retiro
         </ThemedText>
       <ThemedView style={styles.container}>
 

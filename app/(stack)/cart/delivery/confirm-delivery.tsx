@@ -287,7 +287,7 @@ export default function DeliveryScreen() {
       longitude: coordinate!.longitude,
     });
 
-    router.push('/cart/confirm-delivery-final');
+    router.push('/cart/delivery/confirm-delivery-final');
   }
 
   /* ---------------- UI ---------------- */

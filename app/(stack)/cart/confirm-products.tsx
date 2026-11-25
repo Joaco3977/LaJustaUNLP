@@ -7,6 +7,8 @@ import {
   View,
 } from 'react-native';
 
+import { IconSymbol } from '@/components/ui/icon-symbol';
+
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 
@@ -87,8 +89,8 @@ export default function CartConfirmProductsScreen() {
    * Si ya existe un nodeId, lo pasamos para que
    * la pantalla pueda mostrarlo como seleccionado.
    */
-  const selectPickupNode = () => {
-    router.push('/cart/confirm-pickup-node');
+  const selectDeliverMethod = () => {
+    router.push('/cart/confirm-deliver-method');
   };
 
   return (
@@ -137,9 +139,17 @@ export default function CartConfirmProductsScreen() {
                   </ThemedText>
 
                   {item.needCold && (
-                    <ThemedText style={styles.coldText}>
-                      ❄️ Requiere frío
-                    </ThemedText>
+                    <View style={styles.coldContainer}>
+                      <IconSymbol
+                        name="snowflake"
+                        size={17}
+                        color="#2196F3"
+                      />
+
+                      <ThemedText style={styles.coldText}>
+                        Requiere frío
+                      </ThemedText>
+                    </View>
                   )}
                 </View>
 
@@ -171,7 +181,7 @@ export default function CartConfirmProductsScreen() {
               styles.continueButton,
               { backgroundColor: button },
             ]}
-            onPress={selectPickupNode}
+            onPress={selectDeliverMethod}
           >
             <ThemedText
               style={{
@@ -202,6 +212,17 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 24,
     gap: 8,
+  },
+
+  coldContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+
+  coldText: {
+    fontSize: 14,
   },
 
   productRow: {

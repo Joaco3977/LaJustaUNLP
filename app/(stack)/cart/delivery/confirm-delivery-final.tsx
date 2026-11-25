@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useState } from 'react';
 
 import {
@@ -8,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -16,6 +17,11 @@ import { ThemedView } from '@/components/themed-view';
 import { useDeliveryStore } from '@/stores/delivery.store';
 import { useCartStore } from '@/stores/cart.store';
 import { useProducts } from '@/hooks/use-products';
+
+/* ---------------- CONFIGURACIÓN ---------------- */
+
+// Distancia máxima permitida para delivery.
+const DISTANCIA_MAXIMA = 8;
 
 /* ---------------- PRECIOS DE PRUEBA ---------------- */
 
@@ -31,6 +37,8 @@ const formatoPrecio = (precio: number) =>
   });
 
 export default function DeliveryFinalScreen() {
+  const router = useRouter();
+
   const { loadDelivery } = useDeliveryStore();
 
   const cart = useCartStore(state => state.cart);
@@ -54,6 +62,7 @@ export default function DeliveryFinalScreen() {
   const [distance, setDistance] = useState<number | null>(null);
   const [loadingDistance, setLoadingDistance] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   /* ---------------- CARGAR CARRITO ---------------- */
 
@@ -140,7 +149,7 @@ export default function DeliveryFinalScreen() {
     return () => {
       isMounted = false;
     };
-  }, [loadDelivery]);
+  }, [loadDelivery, retryCount]);
 
   /* ---------------- SUBTOTAL PRODUCTOS ---------------- */
 
@@ -160,10 +169,13 @@ export default function DeliveryFinalScreen() {
 
   const totalItems = getTotalItems();
 
-  /* ---------------- PRECIO ENVÍO Y TOTAL ---------------- */
+  /* ---------------- DISTANCIA Y ENVÍO ---------------- */
+
+  const superaDistanciaMaxima =
+    distance !== null && distance > DISTANCIA_MAXIMA;
 
   const precioEnvio =
-    distance !== null
+    distance !== null && !superaDistanciaMaxima
       ? precioBase + precioKm * distance
       : null;
 
@@ -190,9 +202,10 @@ export default function DeliveryFinalScreen() {
     !loadingDistance &&
     !error &&
     !faltanProductos &&
+    !superaDistanciaMaxima &&
     precioEnvio !== null;
 
-  /* ---------------- TERMINAR PEDIDO ---------------- */
+  /* ---------------- ACCIONES ---------------- */
 
   function handleFinishOrder() {
     if (!puedeTerminarPedido) {
@@ -203,6 +216,17 @@ export default function DeliveryFinalScreen() {
       'Confirmar pedido',
       'La pantalla está lista, pero todavía falta conectar el servicio que registra la compra en el servidor.'
     );
+  }
+
+  function handleChoosePickup() {
+    router.push('/cart/pickup/confirm-pickup-node');
+  }
+
+  function handleRetryDistance() {
+    setDistance(null);
+    setError(null);
+    setLoadingDistance(true);
+    setRetryCount(previous => previous + 1);
   }
 
   /* ---------------- UI ---------------- */
@@ -289,22 +313,31 @@ export default function DeliveryFinalScreen() {
 
                 <Pressable
                   style={styles.retryButton}
-                  onPress={() => {
-                    setDistance(null);
-                    setError(null);
-                    setLoadingDistance(true);
-
-                    // El efecto de cálculo se vuelve a
-                    // ejecutar al cambiar la ubicación.
-                    // Para reintentar manualmente, se
-                    // puede extraer calculateDistance.
-                  }}
+                  onPress={handleRetryDistance}
                 >
                   <ThemedText style={styles.retryText}>
-                    Revisar ubicación
+                    Reintentar cálculo
                   </ThemedText>
                 </Pressable>
               </>
+            ) : superaDistanciaMaxima ? (
+              <View style={styles.maxDistanceContainer}>
+                <ThemedText style={styles.maxDistanceMessage}>
+                  Lo sentimos, la ubicación que elegiste se encuentra a{' '}
+                  {distance?.toFixed(2)} km, y solo aceptamos recorridos
+                  de hasta {DISTANCIA_MAXIMA} km. Por favor, elegí un
+                  punto de retiro en persona.
+                </ThemedText>
+
+                <Pressable
+                  style={styles.pickupButton}
+                  onPress={handleChoosePickup}
+                >
+                  <ThemedText style={styles.pickupButtonText}>
+                    Elegir punto de retiro
+                  </ThemedText>
+                </Pressable>
+              </View>
             ) : (
               <>
                 <View style={styles.row}>
@@ -344,6 +377,10 @@ export default function DeliveryFinalScreen() {
             {loadingDistance || productsLoading ? (
               <ThemedText style={styles.totalLoading}>
                 Calculando total...
+              </ThemedText>
+            ) : superaDistanciaMaxima ? (
+              <ThemedText style={styles.error}>
+                No disponible para envío a domicilio.
               </ThemedText>
             ) : error || faltanProductos ? (
               <ThemedText style={styles.error}>
@@ -457,6 +494,31 @@ const styles = StyleSheet.create({
   error: {
     color: '#D32F2F',
     fontSize: 14,
+  },
+
+  maxDistanceContainer: {
+    gap: 14,
+  },
+
+  maxDistanceMessage: {
+    fontSize: 15,
+    color: '#D32F2F',
+    lineHeight: 22,
+  },
+
+  pickupButton: {
+    height: 46,
+    borderRadius: 10,
+    backgroundColor: '#2E7D32',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
+
+  pickupButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: 'bold',
   },
 
   retryButton: {
