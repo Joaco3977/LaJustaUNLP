@@ -59,10 +59,11 @@ export default function CartConfirmPickupNodeScreen() {
     }
 
     if (selectedOption === 'pickup') {
-      router.push('/cart/pickup/confirm-pickup-node-list');
-      /*
+      // NODOS DE RETIRO EN LISTA
+      // router.push('/cart/pickup/confirm-pickup-node-list');
+
+      // NODOS DE RETIRO EN MAPA
       router.push('/cart/pickup/confirm-pickup-node-map');
-      */
     }
   };
 
