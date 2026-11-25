@@ -333,6 +333,7 @@ export default function CartConfirmPickupNodeScreen() {
                   </ThemedText>
                 )}
 
+                {/* NUMERO DE TELEFONO SI TIENE
                 {item.phone && (
                   <View style={styles.infoRow}>
                     <IconSymbol
@@ -346,7 +347,9 @@ export default function CartConfirmPickupNodeScreen() {
                     </ThemedText>
                   </View>
                 )}
+                */}
 
+                {/* HELADERA SI TIENE
                 {item.hasFridge && (
                   <View style={styles.infoRow}>
                     <IconSymbol
@@ -360,6 +363,8 @@ export default function CartConfirmPickupNodeScreen() {
                     </ThemedText>
                   </View>
                 )}
+                */}
+
               </Pressable>
             );
           }}
