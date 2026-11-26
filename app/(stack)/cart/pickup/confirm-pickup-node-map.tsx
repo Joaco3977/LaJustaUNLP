@@ -148,7 +148,7 @@ export default function PickupNodeScreen() {
     }
 
     router.push({
-      pathname: '/cart/confirm-final',
+      pathname: '/cart/pickup/confirm-pickup-node-final',
       params: {
         nodeId: selectedNodeId.toString(),
       },

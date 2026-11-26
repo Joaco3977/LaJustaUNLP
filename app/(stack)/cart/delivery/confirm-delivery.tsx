@@ -267,18 +267,6 @@ export default function DeliveryScreen() {
       return;
     }
 
-    console.log('Datos de entrega:', {
-      ...deliveryAddress,
-      street: street.trim(),
-      streetNumber: streetNumber.trim(),
-      floor: floor.trim(),
-      apartment: apartment.trim(),
-      city: 'La Plata',
-      province: 'Buenos Aires',
-      latitude: coordinate!.latitude,
-      longitude: coordinate!.longitude,
-    });
-
     router.push('/cart/delivery/confirm-delivery-final');
   }
 

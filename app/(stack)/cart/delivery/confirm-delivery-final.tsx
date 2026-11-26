@@ -219,7 +219,7 @@ export default function DeliveryFinalScreen() {
   }
 
   function handleChoosePickup() {
-    router.push('/cart/pickup/confirm-pickup-node');
+    router.push('/cart/pickup/confirm-pickup-node-map');
   }
 
   function handleRetryDistance() {
