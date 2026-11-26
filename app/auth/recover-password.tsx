@@ -127,8 +127,7 @@ export default function RecoverPasswordScreen() {
             </ThemedText>
 
             <ThemedText style={styles.description}>
-              Ingresa el correo que utilizaste para registrarte en nuestra
-              tienda, y te enviaremos un email con la información.
+              Ingresa el correo que utilizaste para registrarte en La Justa, y te enviaremos un email con la información.
             </ThemedText>
 
             <ThemedText style={styles.label}>
