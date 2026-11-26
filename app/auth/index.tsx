@@ -264,6 +264,27 @@ export default function LoginScreen() {
               </Pressable>
             </View>
 
+            {/* RECOVER PASSWORD */}
+            <View style={styles.recoverContainer}>
+              <ThemedText style={styles.recoverText}>
+                ¿Olvidaste tu contraseña?
+              </ThemedText>
+
+              <Pressable
+                onPress={() => router.push('/auth/recover-password')}
+                disabled={loading}
+              >
+                <ThemedText
+                  style={[
+                    styles.recoverLink,
+                    { color: theme.tabIconDefault },
+                  ]}
+                >
+                  Recuperar
+                </ThemedText>
+              </Pressable>
+            </View>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -329,6 +350,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 24,
     gap: 5,
+  },
+
+  recoverContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 5,
+  },
+
+  recoverText: {
+    fontSize: 14,
+  },
+
+  recoverLink: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   registerText: {
