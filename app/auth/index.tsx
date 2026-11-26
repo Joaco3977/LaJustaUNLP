@@ -1,9 +1,15 @@
 import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
 import {
   ActivityIndicator,
+  Animated,
   Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -22,6 +28,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
   const router = useRouter();
+
   const scheme = useColorScheme() ?? 'light';
   const theme = Colors[scheme];
 
@@ -35,7 +42,67 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const { width } = useWindowDimensions();
-  const logoSize = width * 0.75;
+
+  const logoSize = Math.min(width * 0.65, 260);
+  const smallLogoSize = 88;
+
+  /* ---------------- KEYBOARD ANIMATION ---------------- */
+
+  const keyboardAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const showEvent =
+      Platform.OS === 'ios'
+        ? 'keyboardWillShow'
+        : 'keyboardDidShow';
+
+    const hideEvent =
+      Platform.OS === 'ios'
+        ? 'keyboardWillHide'
+        : 'keyboardDidHide';
+
+    const animateKeyboard = (visible: boolean) => {
+      Animated.timing(keyboardAnimation, {
+        toValue: visible ? 1 : 0,
+        duration: 250,
+        useNativeDriver: false,
+      }).start();
+    };
+
+    const showSubscription = Keyboard.addListener(
+      showEvent,
+      () => animateKeyboard(true),
+    );
+
+    const hideSubscription = Keyboard.addListener(
+      hideEvent,
+      () => animateKeyboard(false),
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, [keyboardAnimation]);
+
+  /* ---------------- ANIMATED VALUES ---------------- */
+
+  const animatedLogoSize = keyboardAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [logoSize, smallLogoSize],
+  });
+
+  const animatedLogoWrapperHeight = keyboardAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [logoSize, smallLogoSize],
+  });
+
+  const animatedLogoMargin = keyboardAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [24, 12],
+  });
+
+  /* ---------------- LOGIN ---------------- */
 
   const handleLogin = async () => {
     if (!userName || !password) {
@@ -66,6 +133,7 @@ export default function LoginScreen() {
       }
 
       const data = await response.json();
+
       await login(data.value, data.user);
 
       router.replace('/');
@@ -76,108 +144,155 @@ export default function LoginScreen() {
     }
   };
 
+  /* ---------------- UI ---------------- */
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <View
+      <KeyboardAvoidingView
         style={[
-          styles.container,
+          styles.keyboardContainer,
           { backgroundColor: theme.background },
         ]}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* LOGO */}
-        <View style={styles.logoWrapper}>
-          <Image
-            source={logo}
-            style={{
-              width: logoSize,
-              height: logoSize,
-              borderRadius: logoSize / 2,
-              resizeMode: 'contain',
-            }}
-          />
-        </View>
-
-        {/* TITLE */}
-        <ThemedText type="title" style={styles.title}>
-          Iniciar sesión
-        </ThemedText>
-
-        {/* EMAIL */}
-        <TextInput
-          placeholder="Correo electrónico"
-          value={userName}
-          onChangeText={setUserName}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={[
-            styles.input,
-          ]}
-        />
-
-        {/* PASSWORD */}
-        <TextInput
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={[
-            styles.input,
-          ]}
-        />
-
-        {/* ERROR */}
-        {error && (
-          <ThemedText style={styles.error}>
-            {error}
-          </ThemedText>
-        )}
-
-        {/* BUTTON */}
-        <Pressable
-          style={[
-            styles.button,
-            { backgroundColor: theme.tabIconDefault },
-          ]}
-          onPress={handleLogin}
-          disabled={loading}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator color={theme.buttonText} />
-          ) : (
-            <ThemedText
+          <View style={styles.container}>
+
+            {/* LOGO ANIMADO */}
+            <Animated.View
               style={[
-                styles.buttonText,
-                { color: theme.buttonText },
+                styles.logoWrapper,
+                {
+                  height: animatedLogoWrapperHeight,
+                  marginBottom: animatedLogoMargin,
+                },
               ]}
             >
+              <Animated.Image
+                source={logo}
+                style={{
+                  width: animatedLogoSize,
+                  height: animatedLogoSize,
+                  resizeMode: 'contain',
+                }}
+              />
+            </Animated.View>
+
+            {/* TITLE */}
+            <ThemedText type="title" style={styles.title}>
               Iniciar sesión
             </ThemedText>
-          )}
-        </Pressable>
-      </View>
+
+            {/* EMAIL */}
+            <TextInput
+              placeholder="Correo electrónico"
+              value={userName}
+              onChangeText={setUserName}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="email-address"
+              returnKeyType="next"
+              style={styles.input}
+            />
+
+            {/* PASSWORD */}
+            <TextInput
+              placeholder="Contraseña"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              returnKeyType="done"
+              onSubmitEditing={handleLogin}
+              style={styles.input}
+            />
+
+            {/* ERROR */}
+            {error && (
+              <ThemedText style={styles.error}>
+                {error}
+              </ThemedText>
+            )}
+
+            {/* BUTTON */}
+            <Pressable
+              style={[
+                styles.button,
+                { backgroundColor: theme.tabIconDefault },
+                loading && styles.buttonDisabled,
+              ]}
+              onPress={handleLogin}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color={theme.buttonText} />
+              ) : (
+                <ThemedText
+                  style={[
+                    styles.buttonText,
+                    { color: theme.buttonText },
+                  ]}
+                >
+                  Iniciar sesión
+                </ThemedText>
+              )}
+            </Pressable>
+
+            {/* REGISTER */}
+            <View style={styles.registerContainer}>
+              <ThemedText style={styles.registerText}>
+                ¿No tienes una cuenta?
+              </ThemedText>
+
+              <Pressable
+                onPress={() => router.push('/auth/register')}
+                disabled={loading}
+              >
+                <ThemedText
+                  style={[
+                    styles.registerLink,
+                    { color: theme.tabIconDefault },
+                  ]}
+                >
+                  Regístrate
+                </ThemedText>
+              </Pressable>
+            </View>
+
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }
 
+/* ---------------- STYLES ---------------- */
+
 const styles = StyleSheet.create({
-  container: {
+  keyboardContainer: {
     flex: 1,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+
+  container: {
+    flexGrow: 1,
     paddingHorizontal: 24,
+    paddingVertical: 20,
     justifyContent: 'center',
   },
 
   logoWrapper: {
     alignItems: 'center',
-    marginBottom: 32,
-  },
-
-  logo: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    resizeMode: 'contain',
+    justifyContent: 'center',
   },
 
   title: {
@@ -199,9 +314,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+
   buttonText: {
     fontWeight: '700',
     fontSize: 16,
+  },
+
+  registerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    gap: 5,
+  },
+
+  registerText: {
+    fontSize: 14,
+  },
+
+  registerLink: {
+    fontSize: 14,
+    fontWeight: '700',
   },
 
   error: {
